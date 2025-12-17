@@ -60,16 +60,32 @@ class GrypeTextItem {
 	updatePath(cellSize) {
 		let d = "";
 		// TODO: turn corners smoothly
-		// TODO: offset start and end to borders, prefering left-to-right for a single cell
-		this.gridPositions.forEach((pos, index) => {
-			const centerX = pos.x * cellSize.x + cellSize.x / 2;
-			const centerY = pos.y * cellSize.y + cellSize.y / 2;
-			if (index === 0) {
-				d += `M ${centerX} ${centerY} `;
-			} else {
-				d += `L ${centerX} ${centerY} `;
+		for (let index = 0; index < this.gridPositions.length; index++) {
+			const pos = this.gridPositions[index];
+			let nextPos = this.gridPositions[index + 1];
+			let prevPos = this.gridPositions[index - 1];
+			if (!nextPos && !prevPos) {
+				// single grid cell: left to right orientation
+				prevPos = { x: pos.x - 1, y: pos.y };
+				nextPos = { x: pos.x + 1, y: pos.y };
+			} else if (!nextPos) {
+				// last grid cell: extrapolate
+				nextPos = { x: pos.x + (pos.x - prevPos.x), y: pos.y + (pos.y - prevPos.y) };
+			} else if (!prevPos) {
+				// first grid cell: extrapolate
+				prevPos = { x: pos.x + (pos.x - nextPos.x), y: pos.y + (pos.y - nextPos.y) };
 			}
-		});
+
+			const fromX = (pos.x + prevPos.x + 1) / 2 * cellSize.x;
+			const fromY = (pos.y + prevPos.y + 1) / 2 * cellSize.y;
+			const toX = (pos.x + nextPos.x + 1) / 2 * cellSize.x;
+			const toY = (pos.y + nextPos.y + 1) / 2 * cellSize.y;
+
+			if (index === 0) {
+				d += `M ${fromX} ${fromY} `;
+			}
+			d += `L ${toX} ${toY} `;
+		}
 		this.pathElement.setAttribute("d", d);
 	}
 }
@@ -105,8 +121,8 @@ class GrypeAddTextItemTool extends GrypeTool {
 		this.item = new GrypeTextItem();
 		this.item.gridPositions.push(gridPos);
 		this.grype.svg.append(this.item.element);
-
 		this.grype.grid[key] = this.item;
+		this.item.updatePath(this.grype.cellSize);
 	}
 	/**
 	 * @param {Point} gridPos
