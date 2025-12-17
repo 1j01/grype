@@ -46,9 +46,9 @@ class GrypeTextItem {
 	constructor() {
 		this.id = `grype-path-${crypto.randomUUID()}`;
 		this.element = E("g");
-		this.pathElement = E("path", { id: this.id, stroke: "black", fill: "none" });
+		this.pathElement = E("path", { id: this.id, stroke: "rgba(128, 128, 128, 0.3)", "stroke-width": "9", fill: "none" });
 		this.textPathElement = E("textPath", { href: `#${this.id}` });
-		this.textElement = E("text", { "font-size": "2" });
+		this.textElement = E("text", { "font-size": "5", "dominant-baseline": "middle", fill: "black" });
 
 		this.textElement.append(this.textPathElement);
 		this.element.append(this.textElement);
