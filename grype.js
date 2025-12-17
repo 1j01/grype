@@ -59,7 +59,6 @@ class GrypeTextItem {
 	/** @param {Point} cellSize */
 	updatePath(cellSize) {
 		let d = "";
-		// TODO: turn corners smoothly
 		for (let index = 0; index < this.gridPositions.length; index++) {
 			const pos = this.gridPositions[index];
 			let nextPos = this.gridPositions[index + 1];
@@ -80,11 +79,13 @@ class GrypeTextItem {
 			const fromY = (pos.y + prevPos.y + 1) / 2 * cellSize.y;
 			const toX = (pos.x + nextPos.x + 1) / 2 * cellSize.x;
 			const toY = (pos.y + nextPos.y + 1) / 2 * cellSize.y;
+			const cpX = (pos.x + 0.5) * cellSize.x;
+			const cpY = (pos.y + 0.5) * cellSize.y;
 
 			if (index === 0) {
 				d += `M ${fromX} ${fromY} `;
 			}
-			d += `L ${toX} ${toY} `;
+			d += `Q ${cpX} ${cpY} ${toX} ${toY} `;
 		}
 		this.pathElement.setAttribute("d", d);
 	}
