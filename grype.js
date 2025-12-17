@@ -58,12 +58,18 @@ class GrypeTextItem {
 
 	/** @param {Point} cellSize */
 	updatePath(cellSize) {
-		const d = this.gridPositions
-			.map((pos, i) => {
-				if (i === 0) return `M${pos.x * cellSize.x},${pos.y * cellSize.y}`;
-				return `L${pos.x * cellSize.x},${pos.y * cellSize.y}`;
-			})
-			.join(" ");
+		let d = "";
+		// TODO: turn corners smoothly
+		// TODO: offset start and end to borders, prefering left-to-right for a single cell
+		this.gridPositions.forEach((pos, index) => {
+			const centerX = pos.x * cellSize.x + cellSize.x / 2;
+			const centerY = pos.y * cellSize.y + cellSize.y / 2;
+			if (index === 0) {
+				d += `M ${centerX} ${centerY} `;
+			} else {
+				d += `L ${centerX} ${centerY} `;
+			}
+		});
 		this.pathElement.setAttribute("d", d);
 	}
 }
