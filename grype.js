@@ -29,6 +29,20 @@ export class Grype {
 			// "xmlns:xlink": "http://www.w3.org/1999/xlink",
 		});
 
+		this.dotsGroup = E("g");
+		this.svg.append(this.dotsGroup);
+		for (let y = 1; y < this.gridSize.y; y++) {
+			for (let x = 1; x < this.gridSize.x; x++) {
+				const dot = E("circle", {
+					cx: `${x * this.cellSize.x}`,
+					cy: `${y * this.cellSize.y}`,
+					r: "0.5",
+					fill: "gray",
+				});
+				this.dotsGroup.append(dot);
+			}
+		}
+
 		/* @type {GrypeTextItem | null} */
 		this.creating = null;
 
