@@ -16,68 +16,6 @@ const E = (tagName, attrs = {}) => {
 	return element;
 };
 
-class GrypeItem {
-	/** @type {SVGGElement} */
-	element;
-	constructor() {
-		this.element = E("g");
-	}
-	/** @returns {Point[]} */
-	getGridPositions() {
-		return [];
-	}
-}
-
-class GrypeWindingItem extends GrypeItem {
-	/** @type {Point[]} */
-	gridPositions = [];
-	/** @type {SVGPathElement} */
-	pathElement = E("path");
-	constructor() {
-		super();
-		this.element.append(this.pathElement);
-	}
-	getGridPositions() {
-		return this.gridPositions;
-	}
-}
-
-class GrypeRectangularItem extends GrypeItem {
-	constructor() {
-		super();
-		this.x = 0;
-		this.y = 0;
-		this.width = 0;
-		this.height = 0;
-	}
-	getGridPositions() {
-		/** @type {Point[]} */
-		const positions = [];
-		for (let y = this.y; y < this.y + this.height; y++) {
-			for (let x = this.x; x < this.x + this.width; x++) {
-				positions.push({ x, y });
-			}
-		}
-		return positions;
-	}
-}
-
-class GrypeImageItem extends GrypeRectangularItem {
-	constructor() {
-		super();
-		this.imageElement = E("image");
-		this.element.append(this.imageElement);
-	}
-}
-
-class GrypeTextItem extends GrypeWindingItem {
-	constructor() {
-		super();
-		this.textPathElement = E("textPath");
-		this.element.append(this.textPathElement);
-	}
-}
-
 export class Grype {
 	constructor() {
 		this.gridSize = { x: 10, y: 10 };
