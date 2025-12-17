@@ -16,6 +16,114 @@ const E = (tagName, attrs = {}) => {
 	return element;
 };
 
+class GrypeTextItem {
+	/**
+	 * @type {Point[]}
+	 */
+	gridPositions = [];
+
+	/**
+	 * @type {SVGGElement}
+	 */
+	element;
+
+	/**
+	 * @type {SVGPathElement}
+	 */
+	pathElement;
+
+	/**
+	 * @type {SVGTextPathElement}
+	 */
+	textPathElement;
+
+	/**
+	 * @type {SVGTextElement}
+	 */
+	textElement;
+
+
+	constructor() {
+		this.id = `grype-path-${crypto.randomUUID()}`;
+		this.element = E("g");
+		this.pathElement = E("path", { id: this.id, stroke: "black", fill: "none" });
+		this.textPathElement = E("textPath", { href: `#${this.id}` });
+		this.textElement = E("text", { "font-size": "2" });
+
+		this.textElement.append(this.textPathElement);
+		this.element.append(this.textElement);
+		this.element.append(this.pathElement);
+		this.textPathElement.append("This is only a test");
+	}
+
+	/** @param {Point} cellSize */
+	updatePath(cellSize) {
+		const d = this.gridPositions
+			.map((pos, i) => {
+				if (i === 0) return `M${pos.x * cellSize.x},${pos.y * cellSize.y}`;
+				return `L${pos.x * cellSize.x},${pos.y * cellSize.y}`;
+			})
+			.join(" ");
+		this.pathElement.setAttribute("d", d);
+	}
+}
+
+class GrypeTool {
+	/** @type {Grype} */
+	grype;
+	/** @param {Grype} grype */
+	constructor(grype) {
+		this.grype = grype;
+	}
+	/** @param {Point} gridPos */
+	gestureStart(gridPos) { }
+	/** @param {Point} gridPos */
+	gestureUpdate(gridPos) { }
+	finish() { }
+	cancel() { }
+}
+
+class GrypeAddTextItemTool extends GrypeTool {
+	/** @type {GrypeTextItem | null} */
+	item = null;
+	/**
+	 * @param {Point} gridPos
+	 */
+	gestureStart(gridPos) {
+		const key = this.grype.gridKey(gridPos);
+		if (this.grype.grid[key]) return;
+		if (this.item) {
+			console.log("Shouldn't happen - mouse stuck?");
+			return;
+		}
+		this.item = new GrypeTextItem();
+		this.item.gridPositions.push(gridPos);
+		this.grype.svg.append(this.item.element);
+
+		this.grype.grid[key] = this.item;
+	}
+	/**
+	 * @param {Point} gridPos
+	 */
+	gestureUpdate(gridPos) {
+		if (!this.item) return;
+		const key = this.grype.gridKey(gridPos);
+		if (this.grype.grid[key]) return;
+		// TODO: pathfind, adding intermediate points
+		// don't create intersections
+		this.item.gridPositions.push(gridPos);
+		this.grype.grid[key] = this.item;
+		this.item.updatePath(this.grype.cellSize);
+	}
+	finish() {
+		this.item = null;
+	}
+	cancel() {
+		// TODO: delete the item
+		this.item = null;
+	}
+}
+
 export class Grype {
 	constructor() {
 		this.gridSize = { x: 10, y: 10 };
@@ -43,8 +151,9 @@ export class Grype {
 			}
 		}
 
-		/* @type {GrypeTextItem | null} */
-		this.creating = null;
+		this.tools = {
+			addTextItem: new GrypeAddTextItemTool(this),
+		};
 
 		this.onPointerDown = this.onPointerDown.bind(this);
 		this.onPointerMove = this.onPointerMove.bind(this);
@@ -79,56 +188,25 @@ export class Grype {
 			console.error("setPointerCapture failed:", e);
 		}
 		const pos = this.gridPos(event);
-		const key = this.gridKey(pos);
-		if (this.grid[key]) return;
-		if (this.creating) {
-			console.log("Shouldn't happen - mouse stuck?");
-			return;
-		}
-		const id = `grype-path-${crypto.randomUUID()}`;
-		this.creating = {
-			gridPositions: [pos],
-			pathElement: E("path", { id, stroke: "black", fill: "none" }),
-			textPathElement: E("textPath", { href: `#${id}` }),
-			textElement: E("text", { "font-size": "2" })
-		};
-		this.creating.textElement.append(this.creating.textPathElement);
-		this.svg.append(this.creating.textElement);
-		this.svg.append(this.creating.pathElement);
-		this.creating.textPathElement.append("This is only a test");
-
-		this.grid[key] = this.creating;
+		this.tools.addTextItem.gestureStart(pos);
 		window.addEventListener("pointermove", this.onPointerMove);
 		window.addEventListener("pointerup", this.onPointerUp);
 		window.addEventListener("pointercancel", this.onPointerCancel);
 	}
 	onPointerMove(event) {
 		const pos = this.gridPos(event);
-		const key = this.gridKey(pos);
-		if (this.grid[key]) return;
-		// TODO: pathfind, adding intermediate points
-		// don't create intersections
-		this.creating.gridPositions.push(pos);
-		this.grid[key] = this.creating;
-		this.updatePath(this.creating);
+		this.tools.addTextItem.gestureUpdate(pos);
 	}
 	onPointerUp(event) {
 		window.removeEventListener("pointermove", this.onPointerMove);
 		window.removeEventListener("pointerup", this.onPointerUp);
 		window.removeEventListener("pointercancel", this.onPointerCancel);
-		this.creating = null;
+		this.tools.addTextItem.finish();
 	}
 	onPointerCancel(event) {
-		// TODO: delete the item this.creating
-		this.onPointerUp(event);
-	}
-	updatePath(item) {
-		const d = item.gridPositions
-			.map((pos, i) => {
-				if (i === 0) return `M${pos.x * this.cellSize.x},${pos.y * this.cellSize.y}`;
-				return `L${pos.x * this.cellSize.x},${pos.y * this.cellSize.y}`;
-			})
-			.join(" ");
-		item.pathElement.setAttribute("d", d);
+		window.removeEventListener("pointermove", this.onPointerMove);
+		window.removeEventListener("pointerup", this.onPointerUp);
+		window.removeEventListener("pointercancel", this.onPointerCancel);
+		this.tools.addTextItem.cancel();
 	}
 };
