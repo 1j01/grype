@@ -55,25 +55,37 @@ class GrypeTextItem {
 		this.element.append(this.pathElement);
 		this.textPathElement.append("This is only a test");
 
+		this.workaroundChromeEmptyTextEditing();
 	}
 
 	workaroundChromeEmptyTextEditing() {
 		// In Chrome, when the text becomes empty,
 		// you stop being able to type into it (though you can undo).
-		// To work around this, we insert a zero-width space character
-		// whenever the text becomes empty.
+		// In fact in the case of a <textPath>,
+		// the <textPath> is removed from the DOM
+		// and replaced with... a <br> element. 😆
+		// Definitely goes to show that contentEditable + SVG is a weird edge case.
+		// And that contentEditable is fraught with browser quirks in general.
+
 		// Note: This may leave invisible characters in the text,
 		// especially when undoing.
 		const ZWSP = "\u200B";
-		const target = this.textPathElement;
+		const target = this.textElement;
 
 		let selfChange = false;
 		const observer = new MutationObserver(() => {
+			console.log("Mutation observed", selfChange, target.textContent);
 			if (selfChange) return;
 			if (target.textContent.length === 0) {
 				selfChange = true;
-				target.textContent = ZWSP;
-				selfChange = false;
+				this.textPathElement.textContent = ZWSP;
+				this.textElement.append(this.textPathElement);
+				this.textElement.querySelector("br")?.remove();
+				// Infinite loops without this timeout.
+				// Any better ideas? How about don't use contentEditable...
+				setTimeout(() => {
+					selfChange = false;
+				}, 0);
 			}
 		});
 
