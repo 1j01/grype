@@ -12,7 +12,7 @@ Text follows the winding path of the field, including going backwards / upside d
 - [x] Blinking caret
 - [x] Selection highlight
 - [x] Click to place cursor / select text
-  - [ ] Shift+click to select text without changing anchor
+  - [x] Shift+click to select text without changing anchor
   - [ ] Bidirectional text support
 - [x] Keyboard navigation (arrow keys, shift+arrows for selection, home/end) (native browser behavior)
 - [x] Text copy/cut/paste/delete/undo/redo (native browser behavior)

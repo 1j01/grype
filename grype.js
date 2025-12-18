@@ -119,7 +119,10 @@ class GrypeTextItem {
 		this.pathElement.addEventListener("pointerdown", (event) => {
 			event.preventDefault();
 			this.hiddenInput.focus({ preventScroll: true });
-			anchorIndex = caretIndex = getTextIndex(event);
+			caretIndex = getTextIndex(event);
+			if (!event.shiftKey) {
+				anchorIndex = caretIndex;
+			}
 			setSelection();
 			this.updateVisuals();
 			const onPointerMove = (event) => {
@@ -159,6 +162,8 @@ class GrypeTextItem {
 		this.hiddenInput.addEventListener("selectionchange", (event) => {
 			this.startCursorBlink();
 			this.updateVisuals();
+			anchorIndex = this.hiddenInput.selectionDirection === "backward" ? this.hiddenInput.selectionEnd ?? -1 : this.hiddenInput.selectionStart ?? -1;
+			caretIndex = this.hiddenInput.selectionDirection === "backward" ? this.hiddenInput.selectionStart ?? -1 : this.hiddenInput.selectionEnd ?? -1;
 		});
 
 		// Why?
