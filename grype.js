@@ -5,64 +5,183 @@ import { html, svg } from "./helpers.js";
  */
 
 class GrypeTextItem {
-	/**
-	 * @type {Point[]}
-	 */
+	/** @type {Point[]} */
 	gridPositions = [];
 
-	/**
-	 * @type {SVGGElement}
-	 */
+	/** @type {string} */
+	id;
+	/** @type {SVGGElement} */
 	element;
-
-	/**
-	 * @type {SVGPathElement}
-	 */
+	/** @type {SVGPathElement} */
 	pathElement;
-
-	/**
-	 * @type {SVGTextPathElement}
-	 */
-	textPathElement;
-
-	/**
-	 * @type {SVGTextElement}
-	 */
+	/** @type {SVGTextElement} */
 	textElement;
+	/** @type {SVGTextPathElement} */
+	textPathElement;
+	/** @type {HTMLTextAreaElement} */
+	hiddenTextarea;
 
+	/** @type {SVGLineElement} */
+	caret;
+	/** @type {SVGPathElement} */
+	selectionPath;
+
+	pathThickness = 9;
+	fontSize = 5;
 
 	constructor() {
 		this.id = `grype-path-${crypto.randomUUID()}`;
+
 		this.element = svg("g");
-		this.pathElement = svg("path", { id: this.id, stroke: "rgba(128, 128, 128, 0.3)", "stroke-width": "9", fill: "none" });
+
+		this.pathElement = svg("path", {
+			id: this.id,
+			stroke: "rgba(128,128,128,0.3)",
+			"stroke-width": this.pathThickness,
+			fill: "none"
+		});
+
 		this.textPathElement = svg("textPath", { href: `#${this.id}` });
-		this.textElement = svg("text", { "font-size": "5", "dominant-baseline": "middle", fill: "black" });
-		this.hiddenTextarea = html("textarea", { style: "position: absolute; left: -9999px; top: -9999px;" });
+		this.textElement = svg("text", {
+			"font-size": this.fontSize,
+			"dominant-baseline": "middle",
+			fill: "black"
+		});
+		this.hiddenTextarea = html("textarea", {
+			style: "position:absolute; left:-9999px; top:-9999px;"
+		});
 
 		this.textElement.append(this.textPathElement);
 		this.element.append(this.textElement);
 		this.element.append(this.pathElement);
+
+		// caret
+		this.caret = svg("line", {
+			stroke: "black",
+			"stroke-width": "0.5",
+			visibility: "hidden"
+		});
+		this.element.append(this.caret);
+
+		// selection highlight
+		this.selectionPath = svg("path", {
+			fill: "rgba(0,120,215,0.3)",
+			stroke: "none",
+			visibility: "hidden"
+		});
+		this.element.insertBefore(this.selectionPath, this.textElement);
+
 		this.textPathElement.append("This is only a test");
+
 		// TODO: proper place in DOM
 		document.body.append(this.hiddenTextarea);
 
 		this.pathElement.addEventListener("click", (e) => {
-			// e.stopPropagation();
-			// e.preventDefault();
 			this.hiddenTextarea.value = this.textPathElement.textContent || "";
 			this.hiddenTextarea.focus();
-			// TODO: set cursor position
+			// TODO: set cursor position/selection according to mouse gestures
+			this.hiddenTextarea.setSelectionRange(
+				this.hiddenTextarea.value.length,
+				this.hiddenTextarea.value.length
+			);
+			this.updateVisuals();
 		});
+
 		this.hiddenTextarea.addEventListener("input", (e) => {
 			this.textPathElement.textContent = this.hiddenTextarea.value;
+			this.updateVisuals();
 		});
-		// this.hiddenTextarea.addEventListener("blur", (e) => {
-		// 	this.hiddenTextarea.value = "";
-		// });
-		// TODO: show blinking cursor, selection
+
+		this.hiddenTextarea.addEventListener("selectionchange", () => {
+			this.updateVisuals();
+		});
+
+		// Why?
+		this.hiddenTextarea.addEventListener("keyup", () => this.updateVisuals());
+		// Why?
+		this.hiddenTextarea.addEventListener("mouseup", () => this.updateVisuals());
 	}
 
-	/** @param {Point} cellSize */
+	/** Update caret + selection */
+	updateVisuals() {
+		// UNVETTED AI GENERATED CODE
+		// FIXME: spaces aren't handled correctly
+		const text = this.textPathElement;
+		const path = this.pathElement;
+
+		const start = this.hiddenTextarea.selectionStart ?? 0;
+		const end = this.hiddenTextarea.selectionEnd ?? start;
+
+		// ---- CARET ----
+		if (start === end) {
+			const len = text.getSubStringLength(0, start);
+			const pt = path.getPointAtLength(len);
+
+			const eps = 0.01;
+			const p1 = path.getPointAtLength(Math.max(0, len - eps));
+			const p2 = path.getPointAtLength(len + eps);
+
+			const angle = Math.atan2(p2.y - p1.y, p2.x - p1.x);
+			const h = this.fontSize;
+
+			const dx = Math.sin(angle) * h / 2;
+			const dy = -Math.cos(angle) * h / 2;
+
+			this.caret.setAttribute("x1", pt.x - dx);
+			this.caret.setAttribute("y1", pt.y - dy);
+			this.caret.setAttribute("x2", pt.x + dx);
+			this.caret.setAttribute("y2", pt.y + dy);
+			this.caret.setAttribute("visibility", "visible");
+		} else {
+			this.caret.setAttribute("visibility", "hidden");
+		}
+
+		// ---- SELECTION ----
+		if (start !== end) {
+			const fromLen = text.getSubStringLength(0, start);
+			const toLen = text.getSubStringLength(0, end);
+
+			this.selectionPath.setAttribute(
+				"d",
+				this.buildSelectionPath(path, fromLen, toLen)
+			);
+			this.selectionPath.setAttribute("visibility", "visible");
+		} else {
+			this.selectionPath.setAttribute("visibility", "hidden");
+		}
+	}
+
+	buildSelectionPath(path, from, to) {
+		// UNVETTED AI GENERATED CODE
+		const steps = Math.max(2, Math.ceil((to - from) / 2));
+		const half = this.fontSize / 2;
+
+		const top = [];
+		const bottom = [];
+
+		for (let i = 0; i <= steps; i++) {
+			const t = from + (to - from) * (i / steps);
+			const pt = path.getPointAtLength(t);
+
+			const eps = 0.01;
+			const p1 = path.getPointAtLength(Math.max(0, t - eps));
+			const p2 = path.getPointAtLength(t + eps);
+			const a = Math.atan2(p2.y - p1.y, p2.x - p1.x);
+
+			const nx = Math.sin(a) * half;
+			const ny = -Math.cos(a) * half;
+
+			top.push([pt.x + nx, pt.y + ny]);
+			bottom.push([pt.x - nx, pt.y - ny]);
+		}
+
+		let d = `M ${top[0][0]} ${top[0][1]}`;
+		for (let i = 1; i < top.length; i++) d += ` L ${top[i][0]} ${top[i][1]}`;
+		for (let i = bottom.length - 1; i >= 0; i--)
+			d += ` L ${bottom[i][0]} ${bottom[i][1]}`;
+		return d + " Z";
+	}
+
 	updatePath(cellSize) {
 		let d = "";
 		for (let index = 0; index < this.gridPositions.length; index++) {
