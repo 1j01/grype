@@ -28,6 +28,8 @@ class GrypeTextItem {
 
 	pathThickness = 9;
 	fontSize = 5;
+	cursorBlinkInterval = 500; // ms
+	cursorBlinkTimerId = -1;
 
 	constructor() {
 		this.id = `grype-path-${crypto.randomUUID()}`;
@@ -89,15 +91,21 @@ class GrypeTextItem {
 		this.hiddenInput.addEventListener("focus", () => {
 			this.hiddenInput.value = this.textPathElement.textContent || "";
 			this.updateVisuals();
+			this.startCursorBlink();
+		});
+		this.hiddenInput.addEventListener("blur", () => {
+			this.hideCursor();
 		});
 
 		this.hiddenInput.addEventListener("input", (e) => {
 			console.log("input event:", e);
 			this.textPathElement.textContent = this.hiddenInput.value;
+			this.startCursorBlink();
 			this.updateVisuals();
 		});
 
 		this.hiddenInput.addEventListener("selectionchange", () => {
+			this.startCursorBlink();
 			this.updateVisuals();
 		});
 
@@ -105,6 +113,21 @@ class GrypeTextItem {
 		this.hiddenInput.addEventListener("keyup", () => this.updateVisuals());
 		// Why?
 		this.hiddenInput.addEventListener("mouseup", () => this.updateVisuals());
+	}
+
+	startCursorBlink() {
+		clearTimeout(this.cursorBlinkTimerId);
+		this.caret.style.opacity = "1";
+		const blink = () => {
+			this.caret.style.opacity = this.caret.style.opacity === "1" ? "0" : "1";
+			this.cursorBlinkTimerId = setTimeout(blink, this.cursorBlinkInterval);
+		};
+		this.cursorBlinkTimerId = setTimeout(blink, this.cursorBlinkInterval);
+	}
+
+	hideCursor() {
+		clearTimeout(this.cursorBlinkTimerId);
+		this.caret.style.opacity = "0";
 	}
 
 	/** Update caret + selection */
