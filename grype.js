@@ -118,7 +118,7 @@ class GrypeTextItem {
 		};
 		this.pathElement.addEventListener("pointerdown", (event) => {
 			event.preventDefault();
-			this.hiddenInput.focus();
+			this.hiddenInput.focus({ preventScroll: true });
 			anchorIndex = caretIndex = getTextIndex(event);
 			setSelection();
 			this.updateVisuals();
@@ -335,7 +335,7 @@ class GrypeAddTextItemTool extends GrypeTool {
 		this.grype.svg.append(this.item.element);
 		this.grype.grid[key] = this.item;
 		this.item.updatePath(this.grype.cellSize);
-		this.item.hiddenInput.focus();
+		this.item.hiddenInput.focus({ preventScroll: true });
 	}
 	/**
 	 * @param {Point} gridPos
