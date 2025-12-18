@@ -190,11 +190,27 @@ class GrypeTextItem {
 				// extend to the right since the default direction is left to right
 				newPos = { x: lastPos.x + 1, y: lastPos.y };
 			} else {
-				// TODO: collision detection
-				// turn if needed, reject input if expansion is not possible
 				const dx = lastPos.x - secondLastPos.x;
 				const dy = lastPos.y - secondLastPos.y;
 				newPos = { x: lastPos.x + dx, y: lastPos.y + dy };
+			}
+			if (this.grype.grid[this.grype.gridKey(newPos)]) {
+				// collision - try turning CCW
+				const dx = lastPos.x - secondLastPos.x;
+				const dy = lastPos.y - secondLastPos.y;
+				newPos = { x: lastPos.x - dy, y: lastPos.y + dx };
+			}
+			if (this.grype.grid[this.grype.gridKey(newPos)]) {
+				// collision - try turning CW
+				const dx = lastPos.x - secondLastPos.x;
+				const dy = lastPos.y - secondLastPos.y;
+				newPos = { x: lastPos.x + dy, y: lastPos.y - dx };
+			}
+			if (this.grype.grid[this.grype.gridKey(newPos)]) {
+				// can't expand
+				// TODO: prevent (undo) typing or at least notify user
+				console.log("Cannot expand path further - no free adjacent grid cells");
+				break;
 			}
 			this.gridPositions.push(newPos);
 			// TODO: better interface for adding to Grype grid?

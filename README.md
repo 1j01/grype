@@ -17,7 +17,7 @@ Text follows the winding path of the field, including going backwards / upside d
 - [x] Keyboard navigation (arrow keys, shift+arrows for selection, home/end) (native browser behavior)
 - [x] Text copy/cut/paste/delete/undo/redo (native browser behavior)
 - [x] Text fields expand as you type
-  - [ ] Turn when if needed (preferring CCW)
+  - [x] Turn when needed (preferring CCW)
   - [ ] Prevent typing if expansion is not possible
 - [x] Unicode support (including emoji, combining marks)
 - [ ] Spell check (not planned; couldn't be browser native... unless we used CSS shaders to transform the actual input for display?)
