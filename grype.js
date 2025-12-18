@@ -154,6 +154,7 @@ class GrypeTextItem {
 
 		this.hiddenInput.addEventListener("input", (event) => {
 			this.textPathElement.textContent = this.hiddenInput.value;
+			this.expandIfNeeded();
 			this.startCursorBlink();
 			this.updateVisuals();
 		});
@@ -167,6 +168,31 @@ class GrypeTextItem {
 		this.hiddenInput.addEventListener("keyup", (event) => this.updateVisuals());
 		// Why?
 		this.hiddenInput.addEventListener("mouseup", (event) => this.updateVisuals());
+	}
+
+	expandIfNeeded() {
+		const textLength = this.textPathElement.getComputedTextLength();
+		const pathLength = this.pathElement.getTotalLength();
+		if (textLength > pathLength - this.extraSegmentLength) {
+			// extend path by adding an extra grid cell, turning if needed
+			const lastPos = this.gridPositions[this.gridPositions.length - 1];
+			const secondLastPos = this.gridPositions[this.gridPositions.length - 2];
+			let newPos;
+			if (this.gridPositions.length === 1) {
+				// extend to the right since the default direction is left to right
+				newPos = { x: lastPos.x + 1, y: lastPos.y };
+			} else {
+				// TODO: collision detection
+				// turn if needed, reject input if expansion is not possible
+				const dx = lastPos.x - secondLastPos.x;
+				const dy = lastPos.y - secondLastPos.y;
+				newPos = { x: lastPos.x + dx, y: lastPos.y + dy };
+			}
+			this.gridPositions.push(newPos);
+			// TODO: use metrics from Grype
+			// TODO: add to Grype grid
+			this.updatePath({ x: 10, y: 10 });
+		}
 	}
 
 	startCursorBlink() {
@@ -234,6 +260,7 @@ class GrypeTextItem {
 
 	updatePath(cellSize) {
 		let d = "";
+		this.extraSegmentLength = 0;
 		for (let index = 0; index < this.gridPositions.length; index++) {
 			const pos = this.gridPositions[index];
 			let nextPos = this.gridPositions[index + 1];
@@ -261,8 +288,20 @@ class GrypeTextItem {
 				d += `M ${fromX} ${fromY} `;
 			}
 			d += `Q ${cpX} ${cpY} ${toX} ${toY} `;
+			if (index === this.gridPositions.length - 1) {
+				// For expandIfNeeded, we need the path to be longer than the visible part
+				// because text length measurement only counts rendered letters.
+				// So we add a line at the end.
+				const extraX = toX + (toX - fromX);
+				const extraY = toY + (toY - fromY);
+				d += `L ${extraX} ${extraY} `;
+				this.extraSegmentLength = Math.hypot(extraX - toX, extraY - toY);
+			}
 		}
+
 		this.pathElement.setAttribute("d", d);
+		// Visually cut off the extra length added for expandIfNeeded
+		this.pathElement.setAttribute("stroke-dasharray", `${this.pathElement.getTotalLength() - this.extraSegmentLength} ${this.extraSegmentLength + 9001}`);
 	}
 }
 
