@@ -65,8 +65,9 @@ class GrypeTextItem {
 		});
 
 		this.selectionPath = svg("path", {
-			fill: "rgba(0,120,215,0.3)",
-			stroke: "none",
+			stroke: "rgba(0,120,215,0.3)",
+			"stroke-width": this.pathThickness * 0.6,
+			fill: "none",
 			visibility: "hidden",
 			"pointer-events": "none",
 		});
@@ -179,51 +180,12 @@ class GrypeTextItem {
 			const fromLen = text.getSubStringLength(0, start);
 			const toLen = text.getSubStringLength(0, end);
 
-			this.selectionPath.setAttribute(
-				"d",
-				this.buildSelectionPath(path, fromLen, toLen)
-			);
+			this.selectionPath.setAttribute("d", this.pathElement.getAttribute("d"));
+			this.selectionPath.setAttribute("stroke-dasharray", `0 ${fromLen} ${toLen - fromLen} ${this.pathElement.getTotalLength()}`);
 			this.selectionPath.setAttribute("visibility", "visible");
 		} else {
 			this.selectionPath.setAttribute("visibility", "hidden");
 		}
-	}
-
-	buildSelectionPath(path, from, to) {
-		// AI GENERATED CODE
-		// This quantizes the path, which leads to inaccuracies on curves
-		// TODO: I think I could use the same path rendering code for the textPath path
-		// as for the selection highlight, and it might make it both more accurate and beautiful,
-		// and make the code more beautiful because it would get rid of this whole function.
-		// I could use stroke-dasharray to limit what part of the path is drawn.
-
-		const steps = Math.max(2, Math.ceil((to - from) / 2));
-		const half = this.fontSize / 2;
-
-		const top = [];
-		const bottom = [];
-
-		for (let i = 0; i <= steps; i++) {
-			const t = from + (to - from) * (i / steps);
-			const pt = path.getPointAtLength(t);
-
-			const eps = 0.01;
-			const p1 = path.getPointAtLength(Math.max(0, t - eps));
-			const p2 = path.getPointAtLength(t + eps);
-			const a = Math.atan2(p2.y - p1.y, p2.x - p1.x);
-
-			const nx = Math.sin(a) * half;
-			const ny = -Math.cos(a) * half;
-
-			top.push([pt.x + nx, pt.y + ny]);
-			bottom.push([pt.x - nx, pt.y - ny]);
-		}
-
-		let d = `M ${top[0][0]} ${top[0][1]}`;
-		for (let i = 1; i < top.length; i++) d += ` L ${top[i][0]} ${top[i][1]}`;
-		for (let i = bottom.length - 1; i >= 0; i--)
-			d += ` L ${bottom[i][0]} ${bottom[i][1]}`;
-		return d + " Z";
 	}
 
 	updatePath(cellSize) {
