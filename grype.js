@@ -88,6 +88,7 @@ class GrypeTextItem {
 		});
 
 		this.hiddenInput.addEventListener("input", (e) => {
+			console.log("input event:", e);
 			this.textPathElement.textContent = this.hiddenInput.value;
 			this.updateVisuals();
 		});
@@ -114,7 +115,8 @@ class GrypeTextItem {
 
 		// ---- CARET ----
 		if (start === end) {
-			const len = text.getSubStringLength(0, start);
+			// getSubStringLength can throw IndexSizeError if args are 0, 0
+			const len = start > 0 ? text.getSubStringLength(0, start) : 0;
 			const pt = path.getPointAtLength(len);
 
 			const eps = 0.01;
