@@ -332,6 +332,25 @@ class GrypeTextItem {
 	}
 }
 
+class GrypeImageItem {
+	/** @type {Grype} */
+	grype;
+	/** @type {{x: number, y: number, width: number, height: number}} */
+	gridRegion;
+	/** @type {SVGGElement} */
+	element;
+	/** @type {SVGImageElement} */
+	imageElement;
+
+	/** @param {Grype} grype */
+	constructor(grype) {
+		this.grype = grype;
+		this.element = svg("g");
+		this.imageElement = svg("image");
+		this.element.append(this.imageElement);
+	}
+}
+
 class GrypeTool {
 	/** @type {Grype} */
 	grype;
@@ -441,8 +460,10 @@ export class Grype {
 		this.onPointerMove = this.onPointerMove.bind(this);
 		this.onPointerUp = this.onPointerUp.bind(this);
 		this.onPointerCancel = this.onPointerCancel.bind(this);
+		this.onPaste = this.onPaste.bind(this);
 
 		this.svg.addEventListener("pointerdown", this.onPointerDown);
+		window.addEventListener("paste", this.onPaste);
 	}
 	gridPos(event) {
 		let point = this.svg.createSVGPoint();
@@ -495,5 +516,52 @@ export class Grype {
 		window.removeEventListener("pointerup", this.onPointerUp);
 		window.removeEventListener("pointercancel", this.onPointerCancel);
 		this.tools.addTextItem.cancel();
+	}
+	onPaste(event) {
+		const file = event.clipboardData.files[0];
+		if (file && file.type.startsWith("image/")) {
+			event.preventDefault(); // don't paste file path
+			const reader = new FileReader();
+			reader.onload = (loadEvent) => {
+				const img = new Image();
+				img.onload = () => {
+					// const tool = this.tools.addImageItem;
+					// console.log(event.clientX, event.clientY); nope, undefined, have to track it separately
+					const gridPos = { x: 0, y: 0 }; // TODO: cursor position
+					// TODO: try multiple placements
+					const key = this.gridKey(gridPos);
+					if (this.grid[key]) return;
+					const item = new GrypeImageItem(this);
+					item.gridRegion = {
+						x: gridPos.x,
+						y: gridPos.y,
+						width: 1,
+						height: 1,
+						// TODO: calculate based on image size with max dimensions, preserving aspect ratio
+						// width: Math.ceil(img.width / this.cellSize.x),
+						// height: Math.ceil(img.height / this.cellSize.y),
+					};
+					// TODO: this stuff should be in GrypeImageItem
+					item.imageElement.setAttributeNS("http://www.w3.org/1999/xlink", "href", loadEvent.target.result);
+					// item.imageElement.setAttribute("width", `${img.width}`);
+					// item.imageElement.setAttribute("height", `${img.height}`);
+					// TODO: preserve aspect ratio, center within grid region
+					item.imageElement.setAttribute("width", `${item.gridRegion.width * this.cellSize.x}`);
+					item.imageElement.setAttribute("height", `${item.gridRegion.height * this.cellSize.y}`);
+					item.imageElement.setAttribute("x", `${gridPos.x * this.cellSize.x}`);
+					item.imageElement.setAttribute("y", `${gridPos.y * this.cellSize.y}`);
+					this.svg.append(item.element);
+					// mark grid cells as occupied
+					for (let dy = 0; dy < item.gridRegion.height; dy++) {
+						for (let dx = 0; dx < item.gridRegion.width; dx++) {
+							const occupiedPos = { x: item.gridRegion.x + dx, y: item.gridRegion.y + dy };
+							this.grid[this.gridKey(occupiedPos)] = item;
+						}
+					}
+				};
+				img.src = loadEvent.target.result;
+			};
+			reader.readAsDataURL(file);
+		}
 	}
 };
