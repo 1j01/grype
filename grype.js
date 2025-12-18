@@ -86,6 +86,7 @@ class GrypeTextItem {
 		document.body.append(this.hiddenInput);
 
 		this.pathElement.addEventListener("pointerdown", (event) => {
+			event.preventDefault();
 			this.hiddenInput.focus();
 			// TODO: set cursor position/selection according to mouse gestures
 			this.hiddenInput.setSelectionRange(
