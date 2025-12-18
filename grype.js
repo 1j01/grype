@@ -43,7 +43,10 @@ class GrypeTextItem {
 			fill: "none",
 		});
 
-		this.textPathElement = svg("textPath", { href: `#${this.id}` });
+		this.textPathElement = svg("textPath", {
+			href: `#${this.id}`,
+			style: "white-space: pre",
+		});
 		this.textElement = svg("text", {
 			"font-size": this.fontSize,
 			"dominant-baseline": "middle",
@@ -136,7 +139,6 @@ class GrypeTextItem {
 	/** Update caret + selection */
 	updateVisuals() {
 		// UNVETTED AI GENERATED CODE
-		// FIXME: spaces aren't handled correctly
 		const text = this.textPathElement;
 		const path = this.pathElement;
 
@@ -184,7 +186,13 @@ class GrypeTextItem {
 	}
 
 	buildSelectionPath(path, from, to) {
-		// UNVETTED AI GENERATED CODE
+		// AI GENERATED CODE
+		// This quantizes the path, which leads to inaccuracies on curves
+		// TODO: I think I could use the same path rendering code for the textPath path
+		// as for the selection highlight, and it might make it both more accurate and beautiful,
+		// and make the code more beautiful because it would get rid of this whole function.
+		// I could use stroke-dasharray to limit what part of the path is drawn.
+
 		const steps = Math.max(2, Math.ceil((to - from) / 2));
 		const half = this.fontSize / 2;
 
