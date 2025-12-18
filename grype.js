@@ -77,13 +77,17 @@ class GrypeTextItem {
 		document.body.append(this.hiddenInput);
 
 		this.pathElement.addEventListener("click", (e) => {
-			this.hiddenInput.value = this.textPathElement.textContent || "";
 			this.hiddenInput.focus();
 			// TODO: set cursor position/selection according to mouse gestures
 			this.hiddenInput.setSelectionRange(
 				this.hiddenInput.value.length,
 				this.hiddenInput.value.length
 			);
+			this.updateVisuals();
+		});
+
+		this.hiddenInput.addEventListener("focus", () => {
+			this.hiddenInput.value = this.textPathElement.textContent || "";
 			this.updateVisuals();
 		});
 
@@ -112,6 +116,7 @@ class GrypeTextItem {
 
 		const start = this.hiddenInput.selectionStart ?? 0;
 		const end = this.hiddenInput.selectionEnd ?? start;
+		console.log("Selection:", start, end);
 
 		// ---- CARET ----
 		if (start === end) {
@@ -265,6 +270,7 @@ class GrypeAddTextItemTool extends GrypeTool {
 		this.item.gridPositions.push(gridPos);
 		this.grype.grid[key] = this.item;
 		this.item.updatePath(this.grype.cellSize);
+		this.item.updateVisuals();
 	}
 	finish() {
 		this.item = null;
