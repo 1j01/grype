@@ -1,20 +1,8 @@
+import { html, svg } from "./helpers.js";
+
 /**
  * @typedef {{x: number, y: number}} Point
  */
-
-/** 
- * @template {keyof SVGElementTagNameMap} K
- * @param {K} tagName
- * @param {Object<string, string>} [attrs]
- * @returns {SVGElementTagNameMap[K]}
- */
-const E = (tagName, attrs = {}) => {
-	const element = document.createElementNS("http://www.w3.org/2000/svg", tagName);
-	for (const [key, value] of Object.entries(attrs)) {
-		element.setAttribute(key, value);
-	}
-	return element;
-};
 
 class GrypeTextItem {
 	/**
@@ -45,10 +33,12 @@ class GrypeTextItem {
 
 	constructor() {
 		this.id = `grype-path-${crypto.randomUUID()}`;
-		this.element = E("g");
-		this.pathElement = E("path", { id: this.id, stroke: "rgba(128, 128, 128, 0.3)", "stroke-width": "9", fill: "none" });
-		this.textPathElement = E("textPath", { href: `#${this.id}` });
-		this.textElement = E("text", { "font-size": "5", "dominant-baseline": "middle", fill: "black" });
+		this.element = svg("g");
+		this.pathElement = svg("path", { id: this.id, stroke: "rgba(128, 128, 128, 0.3)", "stroke-width": "9", fill: "none" });
+		this.textPathElement = svg("textPath", { href: `#${this.id}` });
+		this.textElement = svg("text", { "font-size": "5", "dominant-baseline": "middle", fill: "black" });
+		// TODO: hidden textarea for editing text
+		// this.hiddenTextarea = html("textarea", { style: "position: absolute; left: -9999px; top: -9999px;" });
 
 		this.textElement.append(this.textPathElement);
 		this.element.append(this.textElement);
@@ -192,22 +182,21 @@ export class Grype {
 		this.gridSize = { x: 10, y: 10 };
 		this.cellSize = { x: 10, y: 10 };
 		this.grid = {};
-		this.svg = E("svg", {
+		this.svg = svg("svg", {
 			width: "100%",
 			height: "100%",
 			viewBox: "0 0 100 100",
 			// xmlns: "http://www.w3.org/2000/svg",
 			// "xmlns:xlink": "http://www.w3.org/1999/xlink",
 		});
-		this.element = document.createElement("div");
-		this.element.contentEditable = "true";
+		this.element = html("div", { contentEditable: "true" });
 		this.element.append(this.svg);
 
-		this.dotsGroup = E("g");
+		this.dotsGroup = svg("g");
 		this.svg.append(this.dotsGroup);
 		for (let y = 1; y < this.gridSize.y; y++) {
 			for (let x = 1; x < this.gridSize.x; x++) {
-				const dot = E("circle", {
+				const dot = svg("circle", {
 					cx: `${x * this.cellSize.x}`,
 					cy: `${y * this.cellSize.y}`,
 					r: "0.5",
