@@ -76,7 +76,7 @@ class GrypeTextItem {
 		// TODO: proper place in DOM
 		document.body.append(this.hiddenInput);
 
-		this.pathElement.addEventListener("click", (e) => {
+		this.pathElement.addEventListener("pointerdown", (e) => {
 			this.hiddenInput.focus();
 			// TODO: set cursor position/selection according to mouse gestures
 			this.hiddenInput.setSelectionRange(
