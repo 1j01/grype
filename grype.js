@@ -18,8 +18,8 @@ class GrypeTextItem {
 	textElement;
 	/** @type {SVGTextPathElement} */
 	textPathElement;
-	/** @type {HTMLTextAreaElement} */
-	hiddenTextarea;
+	/** @type {HTMLInputElement} */
+	hiddenInput;
 
 	/** @type {SVGLineElement} */
 	caret;
@@ -47,7 +47,7 @@ class GrypeTextItem {
 			"dominant-baseline": "middle",
 			fill: "black"
 		});
-		this.hiddenTextarea = html("textarea", {
+		this.hiddenInput = html("input", {
 			style: "position:absolute; left:-9999px; top:-9999px;"
 		});
 
@@ -74,32 +74,32 @@ class GrypeTextItem {
 		this.textPathElement.append("This is only a test");
 
 		// TODO: proper place in DOM
-		document.body.append(this.hiddenTextarea);
+		document.body.append(this.hiddenInput);
 
 		this.pathElement.addEventListener("click", (e) => {
-			this.hiddenTextarea.value = this.textPathElement.textContent || "";
-			this.hiddenTextarea.focus();
+			this.hiddenInput.value = this.textPathElement.textContent || "";
+			this.hiddenInput.focus();
 			// TODO: set cursor position/selection according to mouse gestures
-			this.hiddenTextarea.setSelectionRange(
-				this.hiddenTextarea.value.length,
-				this.hiddenTextarea.value.length
+			this.hiddenInput.setSelectionRange(
+				this.hiddenInput.value.length,
+				this.hiddenInput.value.length
 			);
 			this.updateVisuals();
 		});
 
-		this.hiddenTextarea.addEventListener("input", (e) => {
-			this.textPathElement.textContent = this.hiddenTextarea.value;
+		this.hiddenInput.addEventListener("input", (e) => {
+			this.textPathElement.textContent = this.hiddenInput.value;
 			this.updateVisuals();
 		});
 
-		this.hiddenTextarea.addEventListener("selectionchange", () => {
+		this.hiddenInput.addEventListener("selectionchange", () => {
 			this.updateVisuals();
 		});
 
 		// Why?
-		this.hiddenTextarea.addEventListener("keyup", () => this.updateVisuals());
+		this.hiddenInput.addEventListener("keyup", () => this.updateVisuals());
 		// Why?
-		this.hiddenTextarea.addEventListener("mouseup", () => this.updateVisuals());
+		this.hiddenInput.addEventListener("mouseup", () => this.updateVisuals());
 	}
 
 	/** Update caret + selection */
@@ -109,8 +109,8 @@ class GrypeTextItem {
 		const text = this.textPathElement;
 		const path = this.pathElement;
 
-		const start = this.hiddenTextarea.selectionStart ?? 0;
-		const end = this.hiddenTextarea.selectionEnd ?? start;
+		const start = this.hiddenInput.selectionStart ?? 0;
+		const end = this.hiddenInput.selectionEnd ?? start;
 
 		// ---- CARET ----
 		if (start === end) {
@@ -249,7 +249,7 @@ class GrypeAddTextItemTool extends GrypeTool {
 		this.grype.svg.append(this.item.element);
 		this.grype.grid[key] = this.item;
 		this.item.updatePath(this.grype.cellSize);
-		this.item.hiddenTextarea.focus();
+		this.item.hiddenInput.focus();
 	}
 	/**
 	 * @param {Point} gridPos
