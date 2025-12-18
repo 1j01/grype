@@ -83,9 +83,6 @@ class GrypeTextItem {
 			this.selectionPath,
 		);
 
-
-		this.textPathElement.append("This is only a test");
-
 		// TODO: proper place in DOM
 		document.body.append(this.hiddenInput);
 
