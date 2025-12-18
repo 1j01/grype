@@ -37,13 +37,29 @@ class GrypeTextItem {
 		this.pathElement = svg("path", { id: this.id, stroke: "rgba(128, 128, 128, 0.3)", "stroke-width": "9", fill: "none" });
 		this.textPathElement = svg("textPath", { href: `#${this.id}` });
 		this.textElement = svg("text", { "font-size": "5", "dominant-baseline": "middle", fill: "black" });
-		// TODO: hidden textarea for editing text
-		// this.hiddenTextarea = html("textarea", { style: "position: absolute; left: -9999px; top: -9999px;" });
+		this.hiddenTextarea = html("textarea", { style: "position: absolute; left: -9999px; top: -9999px;" });
 
 		this.textElement.append(this.textPathElement);
 		this.element.append(this.textElement);
 		this.element.append(this.pathElement);
 		this.textPathElement.append("This is only a test");
+		// TODO: proper place in DOM
+		document.body.append(this.hiddenTextarea);
+
+		this.pathElement.addEventListener("click", (e) => {
+			// e.stopPropagation();
+			// e.preventDefault();
+			this.hiddenTextarea.value = this.textPathElement.textContent || "";
+			this.hiddenTextarea.focus();
+			// TODO: set cursor position
+		});
+		this.hiddenTextarea.addEventListener("input", (e) => {
+			this.textPathElement.textContent = this.hiddenTextarea.value;
+		});
+		// this.hiddenTextarea.addEventListener("blur", (e) => {
+		// 	this.hiddenTextarea.value = "";
+		// });
+		// TODO: show blinking cursor, selection
 	}
 
 	/** @param {Point} cellSize */
@@ -114,6 +130,7 @@ class GrypeAddTextItemTool extends GrypeTool {
 		this.grype.svg.append(this.item.element);
 		this.grype.grid[key] = this.item;
 		this.item.updatePath(this.grype.cellSize);
+		this.item.hiddenTextarea.focus();
 	}
 	/**
 	 * @param {Point} gridPos
