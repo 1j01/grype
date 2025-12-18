@@ -54,6 +54,34 @@ class GrypeTextItem {
 		this.element.append(this.textElement);
 		this.element.append(this.pathElement);
 		this.textPathElement.append("This is only a test");
+
+	}
+
+	workaroundChromeEmptyTextEditing() {
+		// In Chrome, when the text becomes empty,
+		// you stop being able to type into it (though you can undo).
+		// To work around this, we insert a zero-width space character
+		// whenever the text becomes empty.
+		// Note: This may leave invisible characters in the text,
+		// especially when undoing.
+		const ZWSP = "\u200B";
+		const target = this.textPathElement;
+
+		let selfChange = false;
+		const observer = new MutationObserver(() => {
+			if (selfChange) return;
+			if (target.textContent.length === 0) {
+				selfChange = true;
+				target.textContent = ZWSP;
+				selfChange = false;
+			}
+		});
+
+		observer.observe(target, {
+			characterData: true,
+			childList: true,
+			subtree: true
+		});
 	}
 
 	/** @param {Point} cellSize */
@@ -152,13 +180,16 @@ export class Grype {
 		this.gridSize = { x: 10, y: 10 };
 		this.cellSize = { x: 10, y: 10 };
 		this.grid = {};
-		this.element = this.svg = E("svg", {
+		this.svg = E("svg", {
 			width: "100%",
 			height: "100%",
 			viewBox: "0 0 100 100",
 			// xmlns: "http://www.w3.org/2000/svg",
 			// "xmlns:xlink": "http://www.w3.org/1999/xlink",
 		});
+		this.element = document.createElement("div");
+		this.element.contentEditable = "true";
+		this.element.append(this.svg);
 
 		this.dotsGroup = E("g");
 		this.svg.append(this.dotsGroup);
@@ -199,6 +230,12 @@ export class Grype {
 	}
 	onPointerDown(event) {
 		if (event.button !== 0) return;
+		const pos = this.gridPos(event);
+		if (this.gridKey(pos) in this.grid) {
+			// allow text selection on existing items...
+			// or focus at least
+			return;
+		}
 		event.preventDefault();
 		try {
 			window.getSelection().removeAllRanges();
@@ -210,7 +247,6 @@ export class Grype {
 		} catch (e) {
 			console.error("setPointerCapture failed:", e);
 		}
-		const pos = this.gridPos(event);
 		this.tools.addTextItem.gestureStart(pos);
 		window.addEventListener("pointermove", this.onPointerMove);
 		window.addEventListener("pointerup", this.onPointerUp);
