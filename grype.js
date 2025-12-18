@@ -38,9 +38,10 @@ class GrypeTextItem {
 
 		this.pathElement = svg("path", {
 			id: this.id,
-			stroke: "rgba(128,128,128,0.3)",
+			stroke: "white",
 			"stroke-width": this.pathThickness,
 			fill: "none",
+			filter: "url(#simple-border)",
 		});
 
 		this.textPathElement = svg("textPath", {
@@ -51,6 +52,7 @@ class GrypeTextItem {
 			"font-size": this.fontSize,
 			"dominant-baseline": "middle",
 			fill: "black",
+			"pointer-events": "none",
 			style: "user-select: none;",
 		});
 		this.hiddenInput = html("input", {
@@ -75,8 +77,8 @@ class GrypeTextItem {
 
 		this.textElement.append(this.textPathElement);
 		this.element.append(
-			this.textElement,
 			this.pathElement,
+			this.textElement,
 			this.caret,
 			this.selectionPath,
 		);
@@ -332,8 +334,24 @@ export class Grype {
 			height: "100%",
 			viewBox: "0 0 100 100",
 		});
-		this.element = html("div");
+		this.element = html("div", {
+			style: "background: rgb(216, 216, 216)",
+		});
 		this.element.append(this.svg);
+
+		this.defsElement = svg("defs");
+		this.defsElement.innerHTML = `
+		<filter id="simple-border" filterUnits="userSpaceOnUse">
+			<feMorphology operator="dilate" in="SourceAlpha" radius="0.3" />
+			<feComponentTransfer>
+				<feFuncR type="table" tableValues="0" />
+				<feFuncG type="table" tableValues="0" />
+				<feFuncB type="table" tableValues="0" />
+			</feComponentTransfer>
+			<feComposite in="SourceGraphic" operator="over" />
+		</filter>
+		`;
+		this.svg.append(this.defsElement);
 
 		this.dotsGroup = svg("g");
 		this.svg.append(this.dotsGroup);
