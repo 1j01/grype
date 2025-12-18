@@ -40,45 +40,47 @@ class GrypeTextItem {
 			id: this.id,
 			stroke: "rgba(128,128,128,0.3)",
 			"stroke-width": this.pathThickness,
-			fill: "none"
+			fill: "none",
 		});
 
 		this.textPathElement = svg("textPath", { href: `#${this.id}` });
 		this.textElement = svg("text", {
 			"font-size": this.fontSize,
 			"dominant-baseline": "middle",
-			fill: "black"
+			fill: "black",
 		});
 		this.hiddenInput = html("input", {
 			style: "position:absolute; left:-9999px; top:-9999px;"
 		});
 
-		this.textElement.append(this.textPathElement);
-		this.element.append(this.textElement);
-		this.element.append(this.pathElement);
-
-		// caret
 		this.caret = svg("line", {
 			stroke: "black",
 			"stroke-width": "0.5",
-			visibility: "hidden"
+			visibility: "hidden",
 		});
-		this.element.append(this.caret);
 
-		// selection highlight
 		this.selectionPath = svg("path", {
 			fill: "rgba(0,120,215,0.3)",
 			stroke: "none",
-			visibility: "hidden"
+			visibility: "hidden",
 		});
-		this.element.insertBefore(this.selectionPath, this.textElement);
+
+
+		this.textElement.append(this.textPathElement);
+		this.element.append(
+			this.textElement,
+			this.pathElement,
+			this.caret,
+			this.selectionPath,
+		);
+
 
 		this.textPathElement.append("This is only a test");
 
 		// TODO: proper place in DOM
 		document.body.append(this.hiddenInput);
 
-		this.pathElement.addEventListener("pointerdown", (e) => {
+		this.pathElement.addEventListener("pointerdown", (event) => {
 			this.hiddenInput.focus();
 			// TODO: set cursor position/selection according to mouse gestures
 			this.hiddenInput.setSelectionRange(
@@ -88,31 +90,30 @@ class GrypeTextItem {
 			this.updateVisuals();
 		});
 
-		this.hiddenInput.addEventListener("focus", () => {
+		this.hiddenInput.addEventListener("focus", (event) => {
 			this.hiddenInput.value = this.textPathElement.textContent || "";
 			this.updateVisuals();
 			this.startCursorBlink();
 		});
-		this.hiddenInput.addEventListener("blur", () => {
+		this.hiddenInput.addEventListener("blur", (event) => {
 			this.hideCursor();
 		});
 
-		this.hiddenInput.addEventListener("input", (e) => {
-			console.log("input event:", e);
+		this.hiddenInput.addEventListener("input", (event) => {
 			this.textPathElement.textContent = this.hiddenInput.value;
 			this.startCursorBlink();
 			this.updateVisuals();
 		});
 
-		this.hiddenInput.addEventListener("selectionchange", () => {
+		this.hiddenInput.addEventListener("selectionchange", (event) => {
 			this.startCursorBlink();
 			this.updateVisuals();
 		});
 
 		// Why?
-		this.hiddenInput.addEventListener("keyup", () => this.updateVisuals());
+		this.hiddenInput.addEventListener("keyup", (event) => this.updateVisuals());
 		// Why?
-		this.hiddenInput.addEventListener("mouseup", () => this.updateVisuals());
+		this.hiddenInput.addEventListener("mouseup", (event) => this.updateVisuals());
 	}
 
 	startCursorBlink() {
@@ -139,7 +140,6 @@ class GrypeTextItem {
 
 		const start = this.hiddenInput.selectionStart ?? 0;
 		const end = this.hiddenInput.selectionEnd ?? start;
-		console.log("Selection:", start, end);
 
 		// ---- CARET ----
 		if (start === end) {
@@ -313,8 +313,6 @@ export class Grype {
 			width: "100%",
 			height: "100%",
 			viewBox: "0 0 100 100",
-			// xmlns: "http://www.w3.org/2000/svg",
-			// "xmlns:xlink": "http://www.w3.org/1999/xlink",
 		});
 		this.element = html("div");
 		this.element.append(this.svg);
