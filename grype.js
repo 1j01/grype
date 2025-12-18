@@ -87,16 +87,58 @@ class GrypeTextItem {
 		// TODO: proper place in DOM
 		document.body.append(this.hiddenInput);
 
+		let anchorIndex = -1;
+		let caretIndex = -1;
+		const setSelection = () => {
+			this.hiddenInput.setSelectionRange(
+				Math.min(anchorIndex, caretIndex),
+				Math.max(anchorIndex, caretIndex),
+				caretIndex < anchorIndex ? "backward" : "forward"
+			);
+		};
+		const getTextIndex = (event) => {
+			let closestIndex = 0;
+			let closestDist = Infinity;
+			const svg = this.element.ownerSVGElement;
+			for (let i = 0; i <= this.textPathElement.textContent.length; i++) {
+				const len = this.textPathElement.getSubStringLength(0, i);
+				const pt = this.pathElement.getPointAtLength(len);
+				let point = svg.createSVGPoint();
+				point.x = event.clientX;
+				point.y = event.clientY;
+				point = point.matrixTransform(svg.getScreenCTM().inverse());
+				const dx = pt.x - point.x;
+				const dy = pt.y - point.y;
+				const dist = Math.sqrt(dx * dx + dy * dy);
+				if (dist < closestDist) {
+					closestDist = dist;
+					closestIndex = i;
+				}
+			}
+			return closestIndex;
+		};
 		this.pathElement.addEventListener("pointerdown", (event) => {
 			event.preventDefault();
 			this.hiddenInput.focus();
-			// TODO: set cursor position/selection according to mouse gestures
-			this.hiddenInput.setSelectionRange(
-				this.hiddenInput.value.length,
-				this.hiddenInput.value.length
-			);
+			anchorIndex = caretIndex = getTextIndex(event);
+			setSelection();
 			this.updateVisuals();
+			const onPointerMove = (event) => {
+				event.preventDefault();
+				caretIndex = getTextIndex(event);
+				setSelection();
+				this.updateVisuals();
+			};
+			const onPointerUp = (event) => {
+				event.preventDefault();
+				window.removeEventListener("pointermove", onPointerMove);
+				window.removeEventListener("pointerup", onPointerUp);
+			};
+			window.addEventListener("pointermove", onPointerMove);
+			window.addEventListener("pointerup", onPointerUp);
+			window.addEventListener("pointercancel", onPointerUp);
 		});
+
 
 		this.hiddenInput.addEventListener("focus", (event) => {
 			this.hiddenInput.value = this.textPathElement.textContent || "";
