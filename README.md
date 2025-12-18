@@ -36,7 +36,6 @@ Text follows the winding path of the field, including going backwards / upside d
 - You can create overlapping and self-intersecting paths (kinda fun though)
 - Page is scrolled towards the hidden input when typing
 - The viewport is scaled based on width only, requiring scrolling if height > width, and zoom is ineffective (only resizing the width of the viewport scales the content)
-- Text fields only expand by one cell at a time, even if you paste a bunch of ﷽﷽﷽ characters
 - Dilate filter for borders is inefficient (MAY cause lag, not sure how bad)
 - Context menu doesn't work correctly (I recall reading an article about how CodeMirror handled this, but I can't find it now; but basically we need to put something editable under the cursor)
 - Ctrl+Z doesn't undo text field expansion or creation

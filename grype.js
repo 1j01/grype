@@ -168,9 +168,10 @@ class GrypeTextItem {
 	}
 
 	expandIfNeeded() {
-		const textLength = this.textPathElement.getComputedTextLength();
-		const pathLength = this.pathElement.getTotalLength();
-		if (textLength > pathLength - this.extraSegmentLength) {
+		let textLength = this.textPathElement.getComputedTextLength();
+		let pathLength = this.pathElement.getTotalLength();
+		// TODO: safety limit?
+		while (textLength > pathLength - this.extraSegmentLength) {
 			// extend path by adding an extra grid cell, turning if needed
 			const lastPos = this.gridPositions[this.gridPositions.length - 1];
 			const secondLastPos = this.gridPositions[this.gridPositions.length - 2];
@@ -189,6 +190,8 @@ class GrypeTextItem {
 			// TODO: use metrics from Grype
 			// TODO: add to Grype grid
 			this.updatePath({ x: 10, y: 10 });
+			textLength = this.textPathElement.getComputedTextLength();
+			pathLength = this.pathElement.getTotalLength();
 		}
 	}
 
