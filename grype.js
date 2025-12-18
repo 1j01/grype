@@ -5,6 +5,8 @@ import { html, svg } from "./helpers.js";
  */
 
 class GrypeTextItem {
+	/** @type {Grype} */
+	grype;
 	/** @type {Point[]} */
 	gridPositions = [];
 
@@ -28,10 +30,13 @@ class GrypeTextItem {
 
 	pathThickness = 9;
 	fontSize = 5;
+
 	cursorBlinkInterval = 500; // ms
 	cursorBlinkTimerId = -1;
 
-	constructor() {
+	constructor(grype) {
+		this.grype = grype;
+
 		this.id = `grype-path-${crypto.randomUUID()}`;
 
 		this.element = svg("g");
@@ -192,9 +197,10 @@ class GrypeTextItem {
 				newPos = { x: lastPos.x + dx, y: lastPos.y + dy };
 			}
 			this.gridPositions.push(newPos);
-			// TODO: use metrics from Grype
-			// TODO: add to Grype grid
-			this.updatePath({ x: 10, y: 10 });
+			// TODO: better interface for adding to Grype grid?
+			// (is it worth it to have a grid map (denormalized) vs searching all items' gridPositions as needed?)
+			this.updatePath(this.grype.cellSize);
+			this.grype.grid[this.grype.gridKey(newPos)] = this;
 			textLength = this.textPathElement.getComputedTextLength();
 			pathLength = this.pathElement.getTotalLength();
 		}
@@ -338,7 +344,7 @@ class GrypeAddTextItemTool extends GrypeTool {
 			console.log("Shouldn't happen - mouse stuck?");
 			return;
 		}
-		this.item = new GrypeTextItem();
+		this.item = new GrypeTextItem(this.grype);
 		this.item.gridPositions.push(gridPos);
 		this.grype.svg.append(this.item.element);
 		this.grype.grid[key] = this.item;
