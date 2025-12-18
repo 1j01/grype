@@ -103,6 +103,7 @@ class GrypeTextItem {
 		});
 		this.hiddenInput.addEventListener("blur", (event) => {
 			this.hideCursor();
+			this.updateVisuals();
 		});
 
 		this.hiddenInput.addEventListener("input", (event) => {
@@ -145,9 +146,10 @@ class GrypeTextItem {
 
 		const start = this.hiddenInput.selectionStart ?? 0;
 		const end = this.hiddenInput.selectionEnd ?? start;
+		const focused = document.activeElement === this.hiddenInput;
 
 		// ---- CARET ----
-		if (start === end) {
+		if (start === end && focused) {
 			// getSubStringLength can throw IndexSizeError if args are 0, 0
 			const len = start > 0 ? text.getSubStringLength(0, start) : 0;
 			const pt = path.getPointAtLength(len);
@@ -172,7 +174,7 @@ class GrypeTextItem {
 		}
 
 		// ---- SELECTION ----
-		if (start !== end) {
+		if (start !== end && focused) {
 			const fromLen = text.getSubStringLength(0, start);
 			const toLen = text.getSubStringLength(0, end);
 
