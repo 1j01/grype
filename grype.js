@@ -51,6 +51,7 @@ class GrypeTextItem {
 			"font-size": this.fontSize,
 			"dominant-baseline": "middle",
 			fill: "black",
+			style: "user-select: none;",
 		});
 		this.hiddenInput = html("input", {
 			style: "position:absolute; left:-9999px; top:-9999px;"
