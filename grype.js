@@ -57,12 +57,14 @@ class GrypeTextItem {
 			stroke: "black",
 			"stroke-width": "0.5",
 			visibility: "hidden",
+			"pointer-events": "none",
 		});
 
 		this.selectionPath = svg("path", {
 			fill: "rgba(0,120,215,0.3)",
 			stroke: "none",
 			visibility: "hidden",
+			"pointer-events": "none",
 		});
 
 
