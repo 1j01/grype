@@ -349,6 +349,18 @@ class GrypeImageItem {
 		this.imageElement = svg("image");
 		this.element.append(this.imageElement);
 	}
+
+	/** @param {string} url */
+	setImageURL(url) {
+		this.imageElement.setAttributeNS("http://www.w3.org/1999/xlink", "href", url);
+	}
+
+	updatePosition() {
+		this.imageElement.setAttribute("width", `${this.gridRegion.width * this.grype.cellSize.x}`);
+		this.imageElement.setAttribute("height", `${this.gridRegion.height * this.grype.cellSize.y}`);
+		this.imageElement.setAttribute("x", `${this.gridRegion.x * this.grype.cellSize.x}`);
+		this.imageElement.setAttribute("y", `${this.gridRegion.y * this.grype.cellSize.y}`);
+	}
 }
 
 class GrypeTool {
@@ -541,15 +553,8 @@ export class Grype {
 						// width: Math.ceil(img.width / this.cellSize.x),
 						// height: Math.ceil(img.height / this.cellSize.y),
 					};
-					// TODO: this stuff should be in GrypeImageItem
-					item.imageElement.setAttributeNS("http://www.w3.org/1999/xlink", "href", loadEvent.target.result);
-					// item.imageElement.setAttribute("width", `${img.width}`);
-					// item.imageElement.setAttribute("height", `${img.height}`);
-					// TODO: preserve aspect ratio, center within grid region
-					item.imageElement.setAttribute("width", `${item.gridRegion.width * this.cellSize.x}`);
-					item.imageElement.setAttribute("height", `${item.gridRegion.height * this.cellSize.y}`);
-					item.imageElement.setAttribute("x", `${gridPos.x * this.cellSize.x}`);
-					item.imageElement.setAttribute("y", `${gridPos.y * this.cellSize.y}`);
+					item.setImageURL(loadEvent.target.result);
+					item.updatePosition();
 					this.svg.append(item.element);
 					// mark grid cells as occupied
 					for (let dy = 0; dy < item.gridRegion.height; dy++) {
