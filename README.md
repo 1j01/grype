@@ -21,9 +21,9 @@ Text follows the winding path of the field, including going backwards / upside d
   - [ ] Prevent typing if expansion is not possible
 - [x] Unicode support (including emoji, combining marks)
 - [ ] Spell check (not planned; couldn't be browser native... unless we used CSS shaders to transform the actual input for display?)
-- [ ] Paste images into the grid
+- [x] Paste images into the grid
   - [ ] Resize handles
-  - [ ] Drag to reposition
+  - [x] Drag to reposition
 - [ ] A way to delete created items
 - [ ] A way to split text items?
 - [ ] A way to change the shape of text items after creation

@@ -349,6 +349,11 @@ class GrypeImageItem extends GrypeItem {
 		super(grype);
 		this.imageElement = svg("image");
 		this.element.append(this.imageElement);
+		this.onPointerDown = this.onPointerDown.bind(this);
+		this.onPointerMove = this.onPointerMove.bind(this);
+		this.onPointerUp = this.onPointerUp.bind(this);
+		this.onPointerCancel = this.onPointerCancel.bind(this);
+		this.element.addEventListener("pointerdown", this.onPointerDown);
 		// Allow getter to work. Fields take precedence over getters.
 		// https://stackoverflow.com/a/77093264
 		delete this.gridPositions;
@@ -375,6 +380,40 @@ class GrypeImageItem extends GrypeItem {
 			}
 		}
 		return positions;
+	}
+
+	onPointerDown(event) {
+		event.preventDefault();
+		this.element.setPointerCapture(event.pointerId);
+		this.gestureStartPos = this.grype.toSVGSpace(event);
+		this.gestureStartGridRegion = { ...this.gridRegion };
+
+		window.addEventListener("pointermove", this.onPointerMove);
+		window.addEventListener("pointerup", this.onPointerUp);
+		window.addEventListener("pointercancel", this.onPointerCancel);
+	}
+	onPointerMove(event) {
+		event.preventDefault();
+		const currentPos = this.grype.toSVGSpace(event);
+		// TODO: collision detection
+		// TODO: the offset rounding doesn't feel quite right
+		const dx = currentPos.x - this.gestureStartPos.x;
+		const dy = currentPos.y - this.gestureStartPos.y;
+		this.gridRegion.x = Math.round(this.gestureStartGridRegion.x + dx / this.grype.cellSize.x);
+		this.gridRegion.y = Math.round(this.gestureStartGridRegion.y + dy / this.grype.cellSize.y);
+		this.updatePosition();
+		this.grype.updateGridOccupancy(this);
+	}
+	onPointerUp(event) {
+		window.removeEventListener("pointermove", this.onPointerMove);
+		window.removeEventListener("pointerup", this.onPointerUp);
+		window.removeEventListener("pointercancel", this.onPointerCancel);
+	}
+	onPointerCancel(event) {
+		// TODO: undo
+		window.removeEventListener("pointermove", this.onPointerMove);
+		window.removeEventListener("pointerup", this.onPointerUp);
+		window.removeEventListener("pointercancel", this.onPointerCancel);
 	}
 }
 
