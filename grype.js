@@ -410,10 +410,10 @@ class GrypeImageItem extends GrypeItem {
 		window.removeEventListener("pointercancel", this.onPointerCancel);
 	}
 	onPointerCancel(event) {
-		// TODO: undo
-		window.removeEventListener("pointermove", this.onPointerMove);
-		window.removeEventListener("pointerup", this.onPointerUp);
-		window.removeEventListener("pointercancel", this.onPointerCancel);
+		this.onPointerUp(event);
+		this.gridRegion = { ...this.gestureStartGridRegion };
+		this.updatePosition();
+		this.grype.updateGridOccupancy(this);
 	}
 }
 
