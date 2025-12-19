@@ -113,10 +113,7 @@ class GrypeTextItem extends GrypeItem {
 			for (let i = 0; i <= this.textPathElement.textContent.length; i++) {
 				const len = this.textPathElement.getSubStringLength(0, i);
 				const pt = this.pathElement.getPointAtLength(len);
-				let point = svg.createSVGPoint();
-				point.x = event.clientX;
-				point.y = event.clientY;
-				point = point.matrixTransform(svg.getScreenCTM().inverse());
+				const point = this.grype.toSVGSpace(event);
 				const dx = pt.x - point.x;
 				const dy = pt.y - point.y;
 				const dist = Math.sqrt(dx * dx + dy * dy);
@@ -496,14 +493,19 @@ export class Grype {
 		this.svg.addEventListener("pointerdown", this.onPointerDown);
 		window.addEventListener("paste", this.onPaste);
 	}
-	gridPos(event) {
+	toSVGSpace(event) {
 		let point = this.svg.createSVGPoint();
 		point.x = event.clientX;
 		point.y = event.clientY;
-		point = point.matrixTransform(this.svg.getScreenCTM().inverse());
-		const x = Math.floor(point.x / this.cellSize.x);
-		const y = Math.floor(point.y / this.cellSize.y);
-		return { x, y };
+		return point.matrixTransform(this.svg.getScreenCTM().inverse());
+	}
+	gridPosNonInteger(event) {
+		const { x, y } = this.toSVGSpace(event);
+		return { x: x / this.cellSize.x, y: y / this.cellSize.y };
+	}
+	gridPos(event) {
+		const { x, y } = this.gridPosNonInteger(event);
+		return { x: Math.floor(x), y: Math.floor(y) };
 	}
 	gridKey(pos) {
 		return `${pos.x},${pos.y}`;
