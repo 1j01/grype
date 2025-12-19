@@ -352,6 +352,9 @@ class GrypeImageItem extends GrypeItem {
 		super(grype);
 		this.imageElement = svg("image");
 		this.element.append(this.imageElement);
+		// Allow getter to work. Fields take precedence over getters.
+		// https://stackoverflow.com/a/77093264
+		delete this.gridPositions;
 	}
 
 	/** @param {string} url */
