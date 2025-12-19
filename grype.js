@@ -343,20 +343,69 @@ class GrypeImageItem extends GrypeItem {
 	gridRegion;
 	/** @type {SVGImageElement} */
 	imageElement;
+	/** @type {Record<"nw" | "ne" | "se" | "sw", SVGRectElement>} */
+	resizeHandles;
+	/** @type {"move" | "resize" | null} */
+	gestureType;
+	/** @type {"nw" | "ne" | "se" | "sw" | null} */
+	activeHandle;
 
 	/** @param {Grype} grype */
 	constructor(grype) {
 		super(grype);
+		this.onHandlePointerDown = this.onHandlePointerDown.bind(this);
 		this.imageElement = svg("image");
-		this.element.append(this.imageElement);
+		this.imageElement.style.cursor = "move";
+		this.resizeHandles = this.createResizeHandles();
+		this.element.append(this.imageElement, ...Object.values(this.resizeHandles));
 		this.onPointerDown = this.onPointerDown.bind(this);
 		this.onPointerMove = this.onPointerMove.bind(this);
 		this.onPointerUp = this.onPointerUp.bind(this);
 		this.onPointerCancel = this.onPointerCancel.bind(this);
+		this.gestureType = null;
+		this.activeHandle = null;
 		this.element.addEventListener("pointerdown", this.onPointerDown);
 		// Allow getter to work. Fields take precedence over getters.
 		// https://stackoverflow.com/a/77093264
 		delete this.gridPositions;
+	}
+
+	createResizeHandles() {
+		const handles = {
+			nw: this.createResizeHandle("nw", "nwse-resize"),
+			ne: this.createResizeHandle("ne", "nesw-resize"),
+			se: this.createResizeHandle("se", "nwse-resize"),
+			sw: this.createResizeHandle("sw", "nesw-resize"),
+		};
+		return handles;
+	}
+
+	createResizeHandle(handleName, cursor) {
+		const handle = svg("rect", {
+			fill: "white",
+			stroke: "black",
+			"stroke-width": "0.5",
+			"pointer-events": "all",
+		});
+		handle.dataset.handle = handleName;
+		handle.style.cursor = cursor;
+		handle.addEventListener("pointerdown", this.onHandlePointerDown);
+		return handle;
+	}
+
+	onHandlePointerDown(event) {
+		event.stopPropagation();
+		event.preventDefault();
+		const target = /** @type {SVGRectElement} */ (event.currentTarget);
+		const handleName = target.dataset.handle;
+		if (!handleName) return;
+		this.gestureType = "resize";
+		this.activeHandle = handleName;
+		this.gestureStartGridRegion = { ...this.gridRegion };
+		this.element.setPointerCapture(event.pointerId);
+		window.addEventListener("pointermove", this.onPointerMove);
+		window.addEventListener("pointerup", this.onPointerUp);
+		window.addEventListener("pointercancel", this.onPointerCancel);
 	}
 
 	/** @param {string} url */
@@ -369,6 +418,33 @@ class GrypeImageItem extends GrypeItem {
 		this.imageElement.setAttribute("height", `${this.gridRegion.height * this.grype.cellSize.y}`);
 		this.imageElement.setAttribute("x", `${this.gridRegion.x * this.grype.cellSize.x}`);
 		this.imageElement.setAttribute("y", `${this.gridRegion.y * this.grype.cellSize.y}`);
+		this.updateHandles();
+	}
+
+	updateHandles() {
+		if (!this.resizeHandles || !this.gridRegion) return;
+		const cellWidth = this.grype.cellSize.x;
+		const cellHeight = this.grype.cellSize.y;
+		const handleSize = Math.max(2, Math.min(cellWidth, cellHeight) * 0.4);
+		const halfSize = handleSize / 2;
+		const left = this.gridRegion.x * cellWidth;
+		const top = this.gridRegion.y * cellHeight;
+		const right = (this.gridRegion.x + this.gridRegion.width) * cellWidth;
+		const bottom = (this.gridRegion.y + this.gridRegion.height) * cellHeight;
+		const positions = {
+			nw: { x: left - halfSize, y: top - halfSize },
+			ne: { x: right - halfSize, y: top - halfSize },
+			se: { x: right - halfSize, y: bottom - halfSize },
+			sw: { x: left - halfSize, y: bottom - halfSize },
+		};
+		for (const [key, handle] of Object.entries(this.resizeHandles)) {
+			const pos = positions[key];
+			if (!pos) continue;
+			handle.setAttribute("x", `${pos.x}`);
+			handle.setAttribute("y", `${pos.y}`);
+			handle.setAttribute("width", `${handleSize}`);
+			handle.setAttribute("height", `${handleSize}`);
+		}
 	}
 
 	get gridPositions() {
@@ -383,10 +459,13 @@ class GrypeImageItem extends GrypeItem {
 	}
 
 	onPointerDown(event) {
+		if (event.button !== 0) return;
 		event.preventDefault();
 		this.element.setPointerCapture(event.pointerId);
 		this.gestureStartPos = this.grype.toSVGSpace(event);
 		this.gestureStartGridRegion = { ...this.gridRegion };
+		this.gestureType = "move";
+		this.activeHandle = null;
 
 		window.addEventListener("pointermove", this.onPointerMove);
 		window.addEventListener("pointerup", this.onPointerUp);
@@ -394,13 +473,50 @@ class GrypeImageItem extends GrypeItem {
 	}
 	onPointerMove(event) {
 		event.preventDefault();
-		const currentPos = this.grype.toSVGSpace(event);
-		// TODO: collision detection
-		// TODO: the offset rounding doesn't feel quite right
-		const dx = currentPos.x - this.gestureStartPos.x;
-		const dy = currentPos.y - this.gestureStartPos.y;
-		this.gridRegion.x = Math.round(this.gestureStartGridRegion.x + dx / this.grype.cellSize.x);
-		this.gridRegion.y = Math.round(this.gestureStartGridRegion.y + dy / this.grype.cellSize.y);
+		if (this.gestureType === "move") {
+			const currentPos = this.grype.toSVGSpace(event);
+			// TODO: collision detection
+			// TODO: the offset rounding doesn't feel quite right
+			const dx = currentPos.x - this.gestureStartPos.x;
+			const dy = currentPos.y - this.gestureStartPos.y;
+			this.gridRegion.x = Math.round(this.gestureStartGridRegion.x + dx / this.grype.cellSize.x);
+			this.gridRegion.y = Math.round(this.gestureStartGridRegion.y + dy / this.grype.cellSize.y);
+			this.updatePosition();
+			this.grype.updateGridOccupancy(this);
+		} else if (this.gestureType === "resize") {
+			this.handleResizePointerMove(event);
+		}
+	}
+
+	handleResizePointerMove(event) {
+		if (!this.gestureStartGridRegion || !this.activeHandle) return;
+		const pointer = this.grype.gridPosNonInteger(event);
+		let left = this.gestureStartGridRegion.x;
+		let top = this.gestureStartGridRegion.y;
+		let right = this.gestureStartGridRegion.x + this.gestureStartGridRegion.width;
+		let bottom = this.gestureStartGridRegion.y + this.gestureStartGridRegion.height;
+		if (this.activeHandle.includes("w")) {
+			const proposedLeft = Math.floor(pointer.x);
+			left = Math.min(proposedLeft, right - 1);
+		}
+		if (this.activeHandle.includes("e")) {
+			const proposedRight = Math.floor(pointer.x) + 1;
+			right = Math.max(proposedRight, left + 1);
+		}
+		if (this.activeHandle.includes("n")) {
+			const proposedTop = Math.floor(pointer.y);
+			top = Math.min(proposedTop, bottom - 1);
+		}
+		if (this.activeHandle.includes("s")) {
+			const proposedBottom = Math.floor(pointer.y) + 1;
+			bottom = Math.max(proposedBottom, top + 1);
+		}
+		this.gridRegion = {
+			x: left,
+			y: top,
+			width: right - left,
+			height: bottom - top,
+		};
 		this.updatePosition();
 		this.grype.updateGridOccupancy(this);
 	}
@@ -408,9 +524,15 @@ class GrypeImageItem extends GrypeItem {
 		window.removeEventListener("pointermove", this.onPointerMove);
 		window.removeEventListener("pointerup", this.onPointerUp);
 		window.removeEventListener("pointercancel", this.onPointerCancel);
+		if (typeof this.element.hasPointerCapture === "function" && this.element.hasPointerCapture(event.pointerId)) {
+			this.element.releasePointerCapture(event.pointerId);
+		}
+		this.gestureType = null;
+		this.activeHandle = null;
 	}
 	onPointerCancel(event) {
 		this.onPointerUp(event);
+		if (!this.gestureStartGridRegion) return;
 		this.gridRegion = { ...this.gestureStartGridRegion };
 		this.updatePosition();
 		this.grype.updateGridOccupancy(this);
