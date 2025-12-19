@@ -4,16 +4,23 @@ import { html, svg } from "./helpers.js";
  * @typedef {{x: number, y: number}} Point
  */
 
-class GrypeTextItem {
+class GrypeItem {
 	/** @type {Grype} */
 	grype;
 	/** @type {Point[]} */
 	gridPositions = [];
-
-	/** @type {string} */
-	id;
 	/** @type {SVGGElement} */
 	element;
+	/** @param {Grype} grype */
+	constructor(grype) {
+		this.grype = grype;
+		this.element = svg("g");
+	}
+}
+
+class GrypeTextItem extends GrypeItem {
+	/** @type {string} */
+	id;
 	/** @type {SVGPathElement} */
 	pathElement;
 	/** @type {SVGTextElement} */
@@ -34,12 +41,11 @@ class GrypeTextItem {
 	cursorBlinkInterval = 500; // ms
 	cursorBlinkTimerId = -1;
 
+	/** @param {Grype} grype */
 	constructor(grype) {
-		this.grype = grype;
+		super(grype);
 
 		this.id = `grype-path-${crypto.randomUUID()}`;
-
-		this.element = svg("g");
 
 		this.pathElement = svg("path", {
 			id: this.id,
@@ -212,11 +218,14 @@ class GrypeTextItem {
 				console.log("Cannot expand path further - no free adjacent grid cells");
 				break;
 			}
+			if (Math.abs(newPos.x - lastPos.x) + Math.abs(newPos.y - lastPos.y) < 1) {
+				// safety check, in case multiple of the same position was added
+				// as has happened when grid occupancy was not working during development
+				break;
+			}
 			this.gridPositions.push(newPos);
-			// TODO: better interface for adding to Grype grid?
-			// (is it worth it to have a grid map (denormalized) vs searching all items' gridPositions as needed?)
+			this.grype.updateGridOccupancy(this);
 			this.updatePath(this.grype.cellSize);
-			this.grype.grid[this.grype.gridKey(newPos)] = this;
 			textLength = this.textPathElement.getComputedTextLength();
 			pathLength = this.pathElement.getTotalLength();
 		}
@@ -332,20 +341,15 @@ class GrypeTextItem {
 	}
 }
 
-class GrypeImageItem {
-	/** @type {Grype} */
-	grype;
+class GrypeImageItem extends GrypeItem {
 	/** @type {{x: number, y: number, width: number, height: number}} */
 	gridRegion;
-	/** @type {SVGGElement} */
-	element;
 	/** @type {SVGImageElement} */
 	imageElement;
 
 	/** @param {Grype} grype */
 	constructor(grype) {
-		this.grype = grype;
-		this.element = svg("g");
+		super(grype);
 		this.imageElement = svg("image");
 		this.element.append(this.imageElement);
 	}
@@ -360,6 +364,17 @@ class GrypeImageItem {
 		this.imageElement.setAttribute("height", `${this.gridRegion.height * this.grype.cellSize.y}`);
 		this.imageElement.setAttribute("x", `${this.gridRegion.x * this.grype.cellSize.x}`);
 		this.imageElement.setAttribute("y", `${this.gridRegion.y * this.grype.cellSize.y}`);
+	}
+
+	get gridPositions() {
+		const { x, y, width, height } = this.gridRegion;
+		let positions = [];
+		for (let iy = 0; iy < height; iy++) {
+			for (let ix = 0; ix < width; ix++) {
+				positions.push({ x: x + ix, y: y + iy });
+			}
+		}
+		return positions;
 	}
 }
 
@@ -394,7 +409,7 @@ class GrypeAddTextItemTool extends GrypeTool {
 		this.item = new GrypeTextItem(this.grype);
 		this.item.gridPositions.push(gridPos);
 		this.grype.svg.append(this.item.element);
-		this.grype.grid[key] = this.item;
+		this.grype.updateGridOccupancy(this.item);
 		this.item.updatePath(this.grype.cellSize);
 		this.item.hiddenInput.focus({ preventScroll: true });
 	}
@@ -408,7 +423,7 @@ class GrypeAddTextItemTool extends GrypeTool {
 		// TODO: pathfind, adding intermediate points
 		// don't create intersections
 		this.item.gridPositions.push(gridPos);
-		this.grype.grid[key] = this.item;
+		this.grype.updateGridOccupancy(this.item);
 		this.item.updatePath(this.grype.cellSize);
 		this.item.updateVisuals();
 	}
@@ -426,6 +441,7 @@ export class Grype {
 		this.gridSize = { x: 10, y: 10 };
 		this.cellSize = { x: 10, y: 10 };
 		this.grid = {};
+		this.gridKeysByItem = new Map();
 		this.svg = svg("svg", {
 			width: "100%",
 			height: "100%",
@@ -488,6 +504,17 @@ export class Grype {
 	}
 	gridKey(pos) {
 		return `${pos.x},${pos.y}`;
+	}
+	/** @param {GrypeItem} item */
+	updateGridOccupancy(item) {
+		for (const key of this.gridKeysByItem.get(item) ?? []) {
+			delete this.grid[key];
+		}
+		const newGridKeys = item.gridPositions.map(this.gridKey);
+		for (const key of newGridKeys) {
+			this.grid[key] = item;
+		}
+		this.gridKeysByItem.set(item, newGridKeys);
 	}
 	onPointerDown(event) {
 		if (event.button !== 0) return;
@@ -556,13 +583,7 @@ export class Grype {
 					item.setImageURL(loadEvent.target.result);
 					item.updatePosition();
 					this.svg.append(item.element);
-					// mark grid cells as occupied
-					for (let dy = 0; dy < item.gridRegion.height; dy++) {
-						for (let dx = 0; dx < item.gridRegion.width; dx++) {
-							const occupiedPos = { x: item.gridRegion.x + dx, y: item.gridRegion.y + dy };
-							this.grid[this.gridKey(occupiedPos)] = item;
-						}
-					}
+					this.updateGridOccupancy(item);
 				};
 				img.src = loadEvent.target.result;
 			};
