@@ -60,7 +60,7 @@ export class CurvedTextField {
 		// If we do end up using line-height, it shouldn't be arbitrary like it is now.
 		// By the way, should the line height be applied also to the measurement element?
 		this.hiddenInput = html("input", {
-			style: `position:fixed; left:-9999px; top:-9999px; opacity: 0; padding: 5px; line-height: 400px; border: 0; margin: 0; ${sharedStyles}`,
+			style: `position:fixed; left:-9999px; top:-9999px; opacity: 0; padding: 5px; line-height: 400px; touch-action: none; border: 0; margin: 0; ${sharedStyles}`,
 		});
 		this.hiddenMeasurementElement = html("div", {
 			style: `position:fixed; left:-9999px; top:-9999px; visibility:hidden; white-space: pre; ${sharedStyles}`,
