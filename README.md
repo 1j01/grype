@@ -19,8 +19,8 @@ Text follows the winding path of the field, including going backwards / upside d
   - [x] Unicode support (including emoji, combining marks)
   - [ ] Spell check (not planned; couldn't be browser native... unless we used CSS shaders to transform the actual input for display?)
   - [ ] Mobile style text selection (long press, start/end handles)
-  - [ ] Double click to select word, triple click to select all
-  - [ ] Drag selected text within field or to other fields
+  - [x] Double click to select word, triple click to select all (native browser behavior)
+  - [x] Drag selected text within field or to other fields (native browser behavior)
   - [x] Available as a reusable component (`CurvedTextField` class)
 - [x] Text fields expand as you type
   - [x] Turn when needed (preferring CCW)
