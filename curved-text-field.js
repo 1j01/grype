@@ -51,10 +51,9 @@ export class CurvedTextField {
 			"pointer-events": "none",
 			style: "user-select: none;",
 		});
-		// TODO: hide input except for debugging
 		const sharedStyles = "font-size: 10px; font-family: monospace;";
 		this.hiddenInput = html("input", {
-			style: `position:fixed; left:-9999px; top:-9999px; opacity: 0.5; padding: 5px; border: 0; margin: 0; ${sharedStyles}`,
+			style: `position:fixed; left:-9999px; top:-9999px; opacity: 0; padding: 5px; border: 0; margin: 0; ${sharedStyles}`,
 		});
 		this.hiddenMeasurementElement = html("div", {
 			style: `position:fixed; left:-9999px; top:-9999px; visibility:hidden; white-space: pre; ${sharedStyles}`,
