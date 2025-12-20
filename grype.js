@@ -487,7 +487,7 @@ export class Grype {
 			viewBox: "0 0 100 100",
 		});
 		this.element = html("div", {
-			style: "background: rgb(216, 216, 216)",
+			style: "background: rgb(216, 216, 216); touch-action: none;",
 		});
 		this.element.append(this.svg);
 
