@@ -52,11 +52,12 @@ export class CurvedTextField {
 			style: "user-select: none;",
 		});
 		// TODO: hide input except for debugging
+		const sharedStyles = "font-size: 10px; font-family: monospace;";
 		this.hiddenInput = html("input", {
-			style: "position:fixed; left:-9999px; top:-9999px; opacity: 0.5; font-size: 10px; font-family: monospace;"
+			style: `position:fixed; left:-9999px; top:-9999px; opacity: 0.5; padding: 5px; border: 0; margin: 0; ${sharedStyles}`,
 		});
 		this.hiddenMeasurementElement = html("div", {
-			style: "position:fixed; left:-9999px; top:-9999px; visibility:hidden; white-space: pre; font-size: 10px; font-family: monospace;",
+			style: `position:fixed; left:-9999px; top:-9999px; visibility:hidden; white-space: pre; ${sharedStyles}`,
 		});
 
 		this.caret = svg("line", {
@@ -97,7 +98,7 @@ export class CurvedTextField {
 		// 		caretIndex < anchorIndex ? "backward" : "forward"
 		// 	);
 		// };
-		
+
 		// This function handles both pointermove and dragover
 		// and doesn't wait for pointerdown, because we need to update
 		// before pointerdown for the event to target the native input,
@@ -206,12 +207,11 @@ export class CurvedTextField {
 			this.hiddenInput.style.top = `-9999px`;
 			return;
 		}
-		// TODO: handle or remove borders, padding
-		// we probably want padding, for safety, to ensure the mouse is over the input
+		const paddingLeft = parseFloat(getComputedStyle(this.hiddenInput).paddingLeft || "0");
 		const caretIndex = this.getTextIndex(event);
 		this.hiddenMeasurementElement.textContent = this.hiddenInput.value.slice(0, caretIndex);
 		const rect = this.hiddenMeasurementElement.getBoundingClientRect();
-		const offsetX = rect.width;
+		const offsetX = rect.width + paddingLeft;
 		const offsetY = rect.height / 2;
 		this.hiddenInput.style.left = `${event.clientX - offsetX}px`;
 		this.hiddenInput.style.top = `${event.clientY - offsetY}px`;
