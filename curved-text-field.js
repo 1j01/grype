@@ -93,7 +93,6 @@ export class CurvedTextField {
 		const getTextIndex = (event) => {
 			let closestIndex = 0;
 			let closestDist = Infinity;
-			const svg = this.element.ownerSVGElement;
 			for (let i = 0; i <= this.textPathElement.textContent.length; i++) {
 				const len = this.textPathElement.getSubStringLength(0, i);
 				const pt = this.pathElement.getPointAtLength(len);
