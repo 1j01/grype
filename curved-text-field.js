@@ -52,8 +52,15 @@ export class CurvedTextField {
 			style: "user-select: none;",
 		});
 		const sharedStyles = "font-size: 10px; font-family: monospace;";
+		// Testing huge line height to push selection start/end handles off screen on mobile...
+		// We might want this conditionally in order to hide handles when moving the input around,
+		// but show them when you long press since they can KINDA work,
+		// or just hide them always and reimplement selection handles.
+		// A caveat to this is that it can cause the page to scroll.
+		// If we do end up using line-height, it shouldn't be arbitrary like it is now.
+		// By the way, should the line height be applied also to the measurement element?
 		this.hiddenInput = html("input", {
-			style: `position:fixed; left:-9999px; top:-9999px; opacity: 0; padding: 5px; border: 0; margin: 0; ${sharedStyles}`,
+			style: `position:fixed; left:-9999px; top:-9999px; opacity: 0; padding: 5px; line-height: 400px; border: 0; margin: 0; ${sharedStyles}`,
 		});
 		this.hiddenMeasurementElement = html("div", {
 			style: `position:fixed; left:-9999px; top:-9999px; visibility:hidden; white-space: pre; ${sharedStyles}`,
