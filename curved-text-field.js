@@ -217,6 +217,12 @@ export class CurvedTextField {
 		this.hiddenInput.style.top = `${event.clientY - offsetY}px`;
 		// make input wide enough so it never scrolls
 		this.hiddenInput.style.width = `${this.hiddenInput.scrollWidth + 50}px`;
+		// rotate the input so that mobile browsers show selection start/end handles
+		// at least INITIALLY in the correct places; unfortunately we can't get
+		// the pointer position while dragging the handles, but this at least approximates
+		// the desired behavior locally.
+		this.hiddenInput.style.transformOrigin = `${offsetX}px ${offsetY}px`;
+		this.hiddenInput.style.transform = `rotate(${this.textPathElement.getRotationOfChar(caretIndex)}deg)`;
 	}
 
 	toSVGSpace(event) {
