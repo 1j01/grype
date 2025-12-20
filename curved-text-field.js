@@ -97,42 +97,56 @@ export class CurvedTextField {
 		// 		caretIndex < anchorIndex ? "backward" : "forward"
 		// 	);
 		// };
-		const onPointerDown = (event) => {
+		
+		// This function handles both pointermove and dragover
+		// and doesn't wait for pointerdown, because we need to update
+		// before pointerdown for the event to target the native input,
+		// though this might be impossible for touch.
+		// (One thing to try: if we make the input large enough to cover the whole path,
+		// if we update its position on pointerdown, will the native input handling use
+		// the updated position? If so, we can clip the input with clip-path so that
+		// it only accepts pointer events along the path.)
+		const onPointerMove = (event) => {
+			// console.log(event.type);
 			// event.preventDefault();
-			// this.hiddenInput.focus({ preventScroll: true });
-			this.positionHiddenInput(event);
-			// this.hiddenInput.setPointerCapture(event.pointerId);
-
-			// I'm potentially replacing a lot of this behavior with native selection handling
-
 			// caretIndex = getTextIndex(event);
-			// if (!event.shiftKey) {
-			// 	anchorIndex = caretIndex;
-			// }
-
 			// setSelection();
-			// this.updateVisuals();
-			// TODO: also position the input before pointerdown...
-			// which might be impossible for touch
-			const onPointerMove = (event) => {
-				// event.preventDefault();
-				// caretIndex = getTextIndex(event);
-				// setSelection();
-				this.positionHiddenInput(event);
-				this.updateVisuals();
-			};
-			const onPointerUp = (event) => {
-				// event.preventDefault();
-				window.removeEventListener("pointermove", onPointerMove);
-				window.removeEventListener("pointerup", onPointerUp);
-			};
-			window.addEventListener("pointermove", onPointerMove);
-			window.addEventListener("pointerup", onPointerUp);
-			window.addEventListener("pointercancel", onPointerUp);
+			this.positionHiddenInput(event);
+			this.updateVisuals();
 		};
+		// const onPointerDown = (event) => {
+		// 	// event.preventDefault();
+		// 	// this.hiddenInput.focus({ preventScroll: true });
+		// 	this.positionHiddenInput(event);
+		// 	// this.hiddenInput.setPointerCapture(event.pointerId);
 
-		this.pathElement.addEventListener("pointerdown", onPointerDown);
-		this.hiddenInput.addEventListener("pointerdown", onPointerDown);
+		// 	// I'm potentially replacing a lot of this behavior with native selection handling
+
+		// 	// caretIndex = getTextIndex(event);
+		// 	// if (!event.shiftKey) {
+		// 	// 	anchorIndex = caretIndex;
+		// 	// }
+
+		// 	// setSelection();
+		// 	// this.updateVisuals();
+		// 	const onPointerUp = (event) => {
+		// 		console.log(event.type);
+		// 		// event.preventDefault();
+		// 		window.removeEventListener("pointermove", onPointerMove);
+		// 		window.removeEventListener("dragover", onPointerMove);
+		// 		window.removeEventListener("pointerup", onPointerUp);
+		// 	};
+		// 	window.addEventListener("pointermove", onPointerMove);
+		// 	window.addEventListener("dragover", onPointerMove);
+		// 	window.addEventListener("pointerup", onPointerUp);
+		// 	window.addEventListener("pointercancel", onPointerUp);
+		// };
+
+		// this.pathElement.addEventListener("pointerdown", onPointerDown);
+		// this.hiddenInput.addEventListener("pointerdown", onPointerDown);
+
+		window.addEventListener("pointermove", onPointerMove);
+		window.addEventListener("dragover", onPointerMove);
 
 
 		this.hiddenInput.addEventListener("focus", (event) => {
@@ -185,7 +199,15 @@ export class CurvedTextField {
 	}
 
 	positionHiddenInput(event) {
+		const point = this.toSVGSpace(event);
+		if (!this.pathElement.isPointInStroke(point)) {
+			// will this cause scrolling problems?
+			this.hiddenInput.style.left = `-9999px`;
+			this.hiddenInput.style.top = `-9999px`;
+			return;
+		}
 		// TODO: handle or remove borders, padding
+		// we probably want padding, for safety, to ensure the mouse is over the input
 		const caretIndex = this.getTextIndex(event);
 		this.hiddenMeasurementElement.textContent = this.hiddenInput.value.slice(0, caretIndex);
 		const rect = this.hiddenMeasurementElement.getBoundingClientRect();
