@@ -21,6 +21,9 @@ Text follows the winding path of the field, including going backwards / upside d
   - [ ] Prevent typing if expansion is not possible
 - [x] Unicode support (including emoji, combining marks)
 - [ ] Spell check (not planned; couldn't be browser native... unless we used CSS shaders to transform the actual input for display?)
+- [ ] Mobile style text selection (long press, start/end handles)
+- [ ] Double click to select word, triple click to select all
+- [ ] Drag selected text within field or to other fields
 - [x] Paste images into the grid
   - [ ] Resize handles
   - [x] Drag to reposition
@@ -39,7 +42,7 @@ Text follows the winding path of the field, including going backwards / upside d
 - Dilate filter for borders is inefficient (MAY cause lag, not sure how bad)
 - Context menu doesn't work correctly (I recall reading an article about how CodeMirror handled this, but I can't find it now; but basically we need to put something editable under the cursor)
 - Ctrl+Z doesn't undo text field expansion or creation
-- Slight inaccuracy accumulates over curves, seen in selection highlight, caret position, or editing after placing cursor
+- Slight inaccuracy accumulates over curves, seen in selection highlight, caret position, or editing after placing cursor (Chrome-family browsers only; Firefox works fine)
 - Stylistically:
   - I pictured the text fields being a little boxier around turns (though the text shouldn't turn any sharper)
   - padding for text in text field (along the text axis)

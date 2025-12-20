@@ -245,7 +245,15 @@ class GrypeTextItem extends GrypeItem {
 
 	/** Update caret + selection */
 	updateVisuals() {
-		// UNVETTED AI GENERATED CODE
+		// FIXME: inaccuracy in Chrome accumulates around curves
+		// getEndPositionOfChar()/getStartPositionOfChar() are more accurate,
+		// but don't work with ligatures (e.g. "ff" can be rendered as one glyph, and it
+		// will return the same position for both indices)
+		// and they don't naturally work with the selection rendering approach used here.
+		// Worst case scenario, we might need something like a binary search to find path lengths
+		// that correspond to character boundaries. And the path is non-linear,
+		// so we can't assume that a measured position being closer means the index is closer.
+
 		const text = this.textPathElement;
 		const path = this.pathElement;
 
@@ -257,22 +265,22 @@ class GrypeTextItem extends GrypeItem {
 		if (start === end && focused) {
 			// getSubStringLength can throw IndexSizeError if args are 0, 0
 			const len = start > 0 ? text.getSubStringLength(0, start) : 0;
-			const pt = path.getPointAtLength(len);
+			const point = path.getPointAtLength(len);
 
-			const eps = 0.01;
-			const p1 = path.getPointAtLength(Math.max(0, len - eps));
-			const p2 = path.getPointAtLength(len + eps);
+			const epsilon = 0.01;
+			const pointSlightlyBefore = path.getPointAtLength(Math.max(0, len - epsilon));
+			const pointSlightlyAfter = path.getPointAtLength(len + epsilon);
 
-			const angle = Math.atan2(p2.y - p1.y, p2.x - p1.x);
-			const h = this.fontSize;
+			const angle = Math.atan2(pointSlightlyAfter.y - pointSlightlyBefore.y, pointSlightlyAfter.x - pointSlightlyBefore.x);
+			const caretHeight = this.fontSize;
 
-			const dx = Math.sin(angle) * h / 2;
-			const dy = -Math.cos(angle) * h / 2;
+			const dx = Math.sin(angle) * caretHeight / 2;
+			const dy = -Math.cos(angle) * caretHeight / 2;
 
-			this.caret.setAttribute("x1", pt.x - dx);
-			this.caret.setAttribute("y1", pt.y - dy);
-			this.caret.setAttribute("x2", pt.x + dx);
-			this.caret.setAttribute("y2", pt.y + dy);
+			this.caret.setAttribute("x1", point.x - dx);
+			this.caret.setAttribute("y1", point.y - dy);
+			this.caret.setAttribute("x2", point.x + dx);
+			this.caret.setAttribute("y2", point.y + dy);
 			this.caret.setAttribute("visibility", "visible");
 		} else {
 			this.caret.setAttribute("visibility", "hidden");
