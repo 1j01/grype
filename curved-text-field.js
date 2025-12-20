@@ -186,7 +186,6 @@ export class CurvedTextField {
 
 	positionHiddenInput(event) {
 		// TODO: handle or remove borders, padding
-		// TODO: make input wide enough so it never scrolls
 		const caretIndex = this.getTextIndex(event);
 		this.hiddenMeasurementElement.textContent = this.hiddenInput.value.slice(0, caretIndex);
 		const rect = this.hiddenMeasurementElement.getBoundingClientRect();
@@ -194,6 +193,10 @@ export class CurvedTextField {
 		const offsetY = rect.height / 2;
 		this.hiddenInput.style.left = `${event.clientX - offsetX}px`;
 		this.hiddenInput.style.top = `${event.clientY - offsetY}px`;
+		// make input wide enough so it never scrolls
+		// ...or just enough to fit the caret?
+		this.hiddenInput.style.width = `${offsetX + 20}px`;
+		this.hiddenInput.scrollLeft = 0;
 	}
 
 	toSVGSpace(event) {
