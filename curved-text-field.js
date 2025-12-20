@@ -52,15 +52,8 @@ export class CurvedTextField {
 			style: "user-select: none;",
 		});
 		const sharedStyles = "font-size: 10px; font-family: monospace;";
-		// Testing huge line height to push selection start/end handles off screen on mobile...
-		// We might want this conditionally in order to hide handles when moving the input around,
-		// but show them when you long press since they can KINDA work,
-		// or just hide them always and reimplement selection handles.
-		// A caveat to this is that it can cause the page to scroll.
-		// If we do end up using line-height, it shouldn't be arbitrary like it is now.
-		// By the way, should the line height be applied also to the measurement element?
 		this.hiddenInput = html("input", {
-			style: `position:fixed; left:-9999px; top:-9999px; opacity: 0; padding: 5px; line-height: 400px; touch-action: none; border: 0; margin: 0; ${sharedStyles}`,
+			style: `position:fixed; left:-9999px; top:-9999px; opacity: 0.5; padding: 5px; touch-action: none; background: yellow; border: 0; margin: 0; ${sharedStyles}`,
 		});
 		this.hiddenMeasurementElement = html("div", {
 			style: `position:fixed; left:-9999px; top:-9999px; visibility:hidden; white-space: pre; ${sharedStyles}`,
@@ -207,6 +200,8 @@ export class CurvedTextField {
 
 	positionHiddenInput(event) {
 		const point = this.toSVGSpace(event);
+		// Hide the input when pointer is outside the visual text field, so that you can click other things.
+		// TODO: keep positioning the input while dragging starting from the path
 		if (!this.pathElement.isPointInStroke(point)) {
 			// will this cause scrolling problems?
 			this.hiddenInput.style.left = `-9999px`;
@@ -214,21 +209,36 @@ export class CurvedTextField {
 			return;
 		}
 		const paddingLeft = parseFloat(getComputedStyle(this.hiddenInput).paddingLeft || "0");
+		const paddingTop = parseFloat(getComputedStyle(this.hiddenInput).paddingTop || "0");
 		const caretIndex = this.getTextIndex(event);
 		this.hiddenMeasurementElement.textContent = this.hiddenInput.value.slice(0, caretIndex);
 		const rect = this.hiddenMeasurementElement.getBoundingClientRect();
 		const offsetX = rect.width + paddingLeft;
-		const offsetY = rect.height / 2;
+		const offsetY = rect.height / 2 + paddingTop;
 		this.hiddenInput.style.left = `${event.clientX - offsetX}px`;
 		this.hiddenInput.style.top = `${event.clientY - offsetY}px`;
+
 		// make input wide enough so it never scrolls
+		// TODO: make sure this doesn't expand indefinitely
+		// (we could use the hiddenMeasurementElement for this as well, but with full text)
 		this.hiddenInput.style.width = `${this.hiddenInput.scrollWidth + 50}px`;
-		// rotate the input so that mobile browsers show selection start/end handles
-		// at least INITIALLY in the correct places; unfortunately we can't get
-		// the pointer position while dragging the handles, but this at least approximates
-		// the desired behavior locally.
+
 		this.hiddenInput.style.transformOrigin = `${offsetX}px ${offsetY}px`;
-		this.hiddenInput.style.transform = `rotate(${this.textPathElement.getRotationOfChar(caretIndex)}deg)`;
+		const hideHandles = true;
+		if (hideHandles) {
+			// `line-height` can push the selection handles off screen, but not the caret handle
+			// `transform: scaleY` can push both off screen
+			// A caveat to either approach is that it can cause the page to scroll
+			// TODO: non-arbitrary scaling factor (something like "screen size / hiddenInput height"... or maybe "offsetY / hiddenInput height")
+			// TODO: try rotate(180deg) to place handles offscreen ABOVE to hopefully prevent scrolling (in some cases, not universally) depending on how it works
+			this.hiddenInput.style.transform = `scaleY(30)`;
+		} else {
+			// rotate the input so that mobile browsers show selection start/end handles
+			// at least INITIALLY in the correct places; unfortunately we can't get
+			// the pointer position while dragging the handles, but this at least approximates
+			// the desired behavior locally.
+			this.hiddenInput.style.transform = `rotate(${this.textPathElement.getRotationOfChar(caretIndex)}deg)`;
+		}
 	}
 
 	toSVGSpace(event) {
