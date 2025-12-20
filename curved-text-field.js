@@ -216,9 +216,7 @@ export class CurvedTextField {
 		this.hiddenInput.style.left = `${event.clientX - offsetX}px`;
 		this.hiddenInput.style.top = `${event.clientY - offsetY}px`;
 		// make input wide enough so it never scrolls
-		// ...or just enough to fit the caret?
-		this.hiddenInput.style.width = `${offsetX + 20}px`;
-		this.hiddenInput.scrollLeft = 0;
+		this.hiddenInput.style.width = `${this.hiddenInput.scrollWidth + 50}px`;
 	}
 
 	toSVGSpace(event) {
