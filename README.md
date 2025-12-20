@@ -9,21 +9,22 @@ Text follows the winding path of the field, including going backwards / upside d
 ## Features
 - [ ] Purpose
 - [x] Create serpentine text fields
-- [x] Blinking caret
-- [x] Selection highlight
-- [x] Click to place cursor / select text
-  - [x] Shift+click to select text without changing anchor
-  - [ ] Bidirectional text support
-- [x] Keyboard navigation (arrow keys, shift+arrows for selection, home/end) (native browser behavior)
-- [x] Text copy/cut/paste/delete/undo/redo (native browser behavior)
+  - [x] Blinking caret
+  - [x] Selection highlight
+  - [x] Click to place cursor / select text
+    - [x] Shift+click to select text without changing anchor
+    - [ ] Bidirectional text support
+  - [x] Keyboard navigation (arrow keys, shift+arrows for selection, home/end) (native browser behavior)
+  - [x] Text copy/cut/paste/delete/undo/redo (native browser behavior)
+  - [x] Unicode support (including emoji, combining marks)
+  - [ ] Spell check (not planned; couldn't be browser native... unless we used CSS shaders to transform the actual input for display?)
+  - [ ] Mobile style text selection (long press, start/end handles)
+  - [ ] Double click to select word, triple click to select all
+  - [ ] Drag selected text within field or to other fields
+  - [x] Available as a reusable component (`CurvedTextField` class)
 - [x] Text fields expand as you type
   - [x] Turn when needed (preferring CCW)
   - [ ] Prevent typing if expansion is not possible
-- [x] Unicode support (including emoji, combining marks)
-- [ ] Spell check (not planned; couldn't be browser native... unless we used CSS shaders to transform the actual input for display?)
-- [ ] Mobile style text selection (long press, start/end handles)
-- [ ] Double click to select word, triple click to select all
-- [ ] Drag selected text within field or to other fields
 - [x] Paste images into the grid
   - [ ] Resize handles
   - [x] Drag to reposition
@@ -66,8 +67,8 @@ anyways here's some possible directions for the project:
 - art board / mood board tool: create winding captions around images
 - conlang writing system (note to self: e.g. disarchanic runes)
 - chat/collaboration tool of some kind
-- mind mapping / diagramming
-- puzzle game (think Baba is You meets Rush Hour, [Snakeshift](https://1j01.itch.io/snakeshift), [crossword puzzles](https://crosshare.org/isaiahodhner))
+- mind mapping / diagramming (see also: [Minmap](https://github.com/1j01/mind-map))
+- puzzle game (think Baba is You meets Rush Hour, [Snakeshift](https://1j01.itch.io/snakeshift), [crossword puzzles](https://crosshare.org/isaiahodhner), and/or Scribblenauts)
 - library for curved text inputs that can be embedded in other web projects
 
 (see also: [diverge](https://github.com/1j01/diverge))
