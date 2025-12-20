@@ -13,6 +13,8 @@ export class CurvedTextField {
 	textPathElement;
 	/** @type {HTMLInputElement} */
 	hiddenInput;
+	/** @type {HTMLDivElement} */
+	hiddenMeasurementElement;
 
 	/** @type {SVGLineElement} */
 	caret;
@@ -49,8 +51,12 @@ export class CurvedTextField {
 			"pointer-events": "none",
 			style: "user-select: none;",
 		});
+		// TODO: hide input except for debugging
 		this.hiddenInput = html("input", {
-			style: "position:absolute; left:-9999px; top:-9999px;"
+			style: "position:fixed; left:-9999px; top:-9999px; opacity: 0.5; font-size: 10px; font-family: monospace;"
+		});
+		this.hiddenMeasurementElement = html("div", {
+			style: "position:fixed; left:-9999px; top:-9999px; visibility:hidden; white-space: pre; font-size: 10px; font-family: monospace;",
 		});
 
 		this.caret = svg("line", {
@@ -80,58 +86,53 @@ export class CurvedTextField {
 		// TODO: proper place in DOM
 		// (foreignObject so it can be in the same group?)
 		document.body.append(this.hiddenInput);
+		document.body.append(this.hiddenMeasurementElement);
 
-		let anchorIndex = -1;
-		let caretIndex = -1;
-		const setSelection = () => {
-			this.hiddenInput.setSelectionRange(
-				Math.min(anchorIndex, caretIndex),
-				Math.max(anchorIndex, caretIndex),
-				caretIndex < anchorIndex ? "backward" : "forward"
-			);
-		};
-		const getTextIndex = (event) => {
-			let closestIndex = 0;
-			let closestDist = Infinity;
-			for (let i = 0; i <= this.textPathElement.textContent.length; i++) {
-				// getSubStringLength can throw IndexSizeError if args are 0, 0
-				const len = i > 0 ? this.textPathElement.getSubStringLength(0, i) : 0;
-				const pt = this.pathElement.getPointAtLength(len);
-				const point = this.toSVGSpace(event);
-				const dx = pt.x - point.x;
-				const dy = pt.y - point.y;
-				const dist = Math.sqrt(dx * dx + dy * dy);
-				if (dist < closestDist) {
-					closestDist = dist;
-					closestIndex = i;
-				}
-			}
-			return closestIndex;
-		};
-		this.pathElement.addEventListener("pointerdown", (event) => {
-			event.preventDefault();
-			this.hiddenInput.focus({ preventScroll: true });
-			caretIndex = getTextIndex(event);
-			if (!event.shiftKey) {
-				anchorIndex = caretIndex;
-			}
-			setSelection();
-			this.updateVisuals();
+		// let anchorIndex = -1;
+		// let caretIndex = -1;
+		// const setSelection = () => {
+		// 	this.hiddenInput.setSelectionRange(
+		// 		Math.min(anchorIndex, caretIndex),
+		// 		Math.max(anchorIndex, caretIndex),
+		// 		caretIndex < anchorIndex ? "backward" : "forward"
+		// 	);
+		// };
+		const onPointerDown = (event) => {
+			// event.preventDefault();
+			// this.hiddenInput.focus({ preventScroll: true });
+			this.positionHiddenInput(event);
+			// this.hiddenInput.setPointerCapture(event.pointerId);
+
+			// I'm potentially replacing a lot of this behavior with native selection handling
+
+			// caretIndex = getTextIndex(event);
+			// if (!event.shiftKey) {
+			// 	anchorIndex = caretIndex;
+			// }
+
+			// setSelection();
+			// this.updateVisuals();
+			// TODO: also position the input before pointerdown...
+			// which might be impossible for touch
 			const onPointerMove = (event) => {
-				event.preventDefault();
-				caretIndex = getTextIndex(event);
-				setSelection();
+				// event.preventDefault();
+				// caretIndex = getTextIndex(event);
+				// setSelection();
+				this.positionHiddenInput(event);
 				this.updateVisuals();
 			};
 			const onPointerUp = (event) => {
-				event.preventDefault();
+				// event.preventDefault();
 				window.removeEventListener("pointermove", onPointerMove);
 				window.removeEventListener("pointerup", onPointerUp);
 			};
 			window.addEventListener("pointermove", onPointerMove);
 			window.addEventListener("pointerup", onPointerUp);
 			window.addEventListener("pointercancel", onPointerUp);
-		});
+		};
+
+		this.pathElement.addEventListener("pointerdown", onPointerDown);
+		this.hiddenInput.addEventListener("pointerdown", onPointerDown);
 
 
 		this.hiddenInput.addEventListener("focus", (event) => {
@@ -162,6 +163,37 @@ export class CurvedTextField {
 		this.hiddenInput.addEventListener("keyup", (event) => this.updateVisuals());
 		// Why?
 		this.hiddenInput.addEventListener("mouseup", (event) => this.updateVisuals());
+	}
+
+	getTextIndex(event) {
+		let closestIndex = 0;
+		let closestDist = Infinity;
+		for (let i = 0; i <= this.textPathElement.textContent.length; i++) {
+			// getSubStringLength can throw IndexSizeError if args are 0, 0
+			const len = i > 0 ? this.textPathElement.getSubStringLength(0, i) : 0;
+			const pt = this.pathElement.getPointAtLength(len);
+			const point = this.toSVGSpace(event);
+			const dx = pt.x - point.x;
+			const dy = pt.y - point.y;
+			const dist = Math.sqrt(dx * dx + dy * dy);
+			if (dist < closestDist) {
+				closestDist = dist;
+				closestIndex = i;
+			}
+		}
+		return closestIndex;
+	}
+
+	positionHiddenInput(event) {
+		// TODO: handle or remove borders, padding
+		// TODO: make input wide enough so it never scrolls
+		const caretIndex = this.getTextIndex(event);
+		this.hiddenMeasurementElement.textContent = this.hiddenInput.value.slice(0, caretIndex);
+		const rect = this.hiddenMeasurementElement.getBoundingClientRect();
+		const offsetX = rect.width;
+		const offsetY = rect.height / 2;
+		this.hiddenInput.style.left = `${event.clientX - offsetX}px`;
+		this.hiddenInput.style.top = `${event.clientY - offsetY}px`;
 	}
 
 	toSVGSpace(event) {
