@@ -450,7 +450,6 @@ class GrypeAddTextItemTool extends GrypeTool {
 		this.grype.svg.append(this.item.element);
 		this.grype.updateGridOccupancy(this.item);
 		this.item.updatePath(this.grype.cellSize);
-		this.item.hiddenInput.focus({ preventScroll: true });
 	}
 	/**
 	 * @param {Point} gridPos
@@ -467,6 +466,7 @@ class GrypeAddTextItemTool extends GrypeTool {
 		this.item.updateVisuals();
 	}
 	finish() {
+		this.item.hiddenInput.focus({ preventScroll: true });
 		this.item = null;
 	}
 	cancel() {
