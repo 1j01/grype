@@ -16,6 +16,7 @@ Text follows the winding path of the field, including going backwards / upside d
     - [ ] Bidirectional text support
   - [x] Keyboard navigation (arrow keys, shift+arrows for selection, home/end) (native browser behavior)
   - [x] Text copy/cut/paste/delete/undo/redo (native browser behavior)
+  - [x] Context menu copy/cut/paste/select all (native browser behavior)
   - [x] Unicode support (including emoji, combining marks)
   - [ ] Spell check (not planned; couldn't be browser native... unless we used CSS shaders to transform the actual input for display?)
   - [ ] Mobile style text selection (long press, start/end handles)
@@ -41,7 +42,6 @@ Text follows the winding path of the field, including going backwards / upside d
 - Page is scrolled towards the hidden input when typing
 - The viewport is scaled based on width only, requiring scrolling if height > width, and zoom is ineffective (only resizing the width of the viewport scales the content)
 - Dilate filter for borders is inefficient (MAY cause lag, not sure how bad)
-- Context menu doesn't work correctly (I recall reading an article about how CodeMirror handled this, but I can't find it now; but basically we need to put something editable under the cursor)
 - Ctrl+Z doesn't undo text field expansion or creation
 - Slight inaccuracy accumulates over curves, seen in selection highlight, caret position, or editing after placing cursor (Chrome-family browsers only; Firefox works fine)
 - Stylistically:
