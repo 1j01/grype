@@ -69,6 +69,7 @@ anyways here's some possible directions for the project:
 - chat/collaboration tool of some kind
 - mind mapping / diagramming (see also: [Minmap](https://github.com/1j01/mind-map))
 - puzzle game (think Baba is You meets Rush Hour, [Snakeshift](https://1j01.itch.io/snakeshift), [crossword puzzles](https://crosshare.org/isaiahodhner), and/or Scribblenauts)
+- tron typing action game: type different words to turn or go straight; try to box in your opponent(s); lobby system where you can create rooms and configure width/height, max players, time limit, and win conditions: either most letters, most words, or last standing. It would be different from Tron in that you can control your speed, so you would never crash unless you were forced to or made a mistake in which word you chose to type.
 - library for curved text inputs that can be embedded in other web projects
 
 (see also: [diverge](https://github.com/1j01/diverge))
