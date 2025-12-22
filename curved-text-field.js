@@ -146,6 +146,16 @@ export class CurvedTextField {
 		// this.pathElement.addEventListener("pointerdown", onPointerDown);
 		// this.hiddenInput.addEventListener("pointerdown", onPointerDown);
 
+		const onPointerDown = (event) => {
+			this.draggingFromPath = true;
+		};
+		const onPointerUp = (event) => {
+			this.draggingFromPath = false;
+		};
+		this.pathElement.addEventListener("pointerdown", onPointerDown);
+		this.hiddenInput.addEventListener("pointerdown", onPointerDown);
+		window.addEventListener("pointerup", onPointerUp);
+		window.addEventListener("pointercancel", onPointerUp);
 		window.addEventListener("pointermove", onPointerMove);
 		window.addEventListener("dragover", onPointerMove);
 
@@ -201,9 +211,9 @@ export class CurvedTextField {
 
 	positionHiddenInput(event) {
 		const point = this.toSVGSpace(event);
-		// Hide the input when pointer is outside the visual text field, so that you can click other things.
-		// TODO: keep positioning the input while dragging starting from the path
-		if (!this.pathElement.isPointInStroke(point)) {
+		// Hide the input when pointer not interacting with or hovering over visual text field,
+		// so that you can click other things on the page.
+		if (!this.draggingFromPath && !this.pathElement.isPointInStroke(point)) {
 			// will this cause scrolling problems?
 			this.hiddenInput.style.left = `-9999px`;
 			this.hiddenInput.style.top = `-9999px`;
