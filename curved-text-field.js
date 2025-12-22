@@ -52,8 +52,9 @@ export class CurvedTextField {
 			style: "user-select: none;",
 		});
 		const sharedStyles = "font-size: 10px; font-family: monospace;";
+		const debug = location.search.includes("curved-text-field-debug");
 		this.hiddenInput = html("input", {
-			style: `position:fixed; left:-9999px; top:-9999px; opacity: 0.5; padding: 5px; touch-action: none; background: yellow; border: 0; margin: 0; ${sharedStyles}`,
+			style: `position:fixed; left:-9999px; top:-9999px; opacity: ${debug ? 0.5 : 0}; padding: 5px; touch-action: none; background: yellow; border: 0; margin: 0; ${sharedStyles}`,
 		});
 		this.hiddenMeasurementElement = html("div", {
 			style: `position:fixed; left:-9999px; top:-9999px; visibility:hidden; white-space: pre; ${sharedStyles}`,
