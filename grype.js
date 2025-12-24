@@ -42,11 +42,12 @@ class GrypeTextItem extends GrypeItem {
 		while (textLength > pathLength - this.extraSegmentLength) {
 			// extend path by adding an extra grid cell, turning if needed
 			const lastPos = this.gridPositions[this.gridPositions.length - 1];
-			const secondLastPos = this.gridPositions[this.gridPositions.length - 2];
+			let secondLastPos = this.gridPositions[this.gridPositions.length - 2];
 			let newPos;
 			if (this.gridPositions.length === 1) {
 				// extend to the right since the default direction is left to right
 				newPos = { x: lastPos.x + 1, y: lastPos.y };
+				secondLastPos = { x: lastPos.x - 1, y: lastPos.y };
 			} else {
 				const dx = lastPos.x - secondLastPos.x;
 				const dy = lastPos.y - secondLastPos.y;
