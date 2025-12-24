@@ -375,36 +375,30 @@ export class CurvedTextField {
 		// ---- SELECTION HANDLES (TOUCH) ----
 		if (start !== end && focused && this.usingTouch) {
 			const screenCTM = this.element.ownerSVGElement.getScreenCTM();
-			// TODO: DRY (there's a reason I made the selectionHandles an array)
-			const fromLen = text.getSubStringLength(0, start);
-			const toLen = text.getSubStringLength(0, end);
 
-			let startPt = path.getPointAtLength(fromLen);
-			let endPt = path.getPointAtLength(toLen);
+			for (let i = 0; i < this.selectionHandles.length; i++) {
+				const handle = this.selectionHandles[i];
 
-			startPt = startPt.matrixTransform(screenCTM);
-			endPt = endPt.matrixTransform(screenCTM);
+				const pathOffset = text.getSubStringLength(0, i === 0 ? start : end);
 
-			const startAngle = getRotationAtLength(path, fromLen);
-			const endAngle = getRotationAtLength(path, toLen);
+				let point = path.getPointAtLength(pathOffset);
 
-			const [startHandle, endHandle] = this.selectionHandles;
+				point = point.matrixTransform(screenCTM);
 
-			if (!startHandle.parentElement) {
-				document.body.append(startHandle, endHandle);
+				const angle = getRotationAtLength(path, pathOffset);
+
+				if (!handle.parentElement) {
+					document.body.append(handle);
+				}
+
+				const svgScaleFactor = screenCTM.a;
+				const handleY = parseFloat(this.selectionPath.getAttribute("stroke-width")) / 2 * svgScaleFactor;
+				const scaleX = i === 0 ? -1 : 1;
+
+				handle.style.left = `${point.x}px`;
+				handle.style.top = `${point.y}px`;
+				handle.style.transform = `rotate(${angle * 180 / Math.PI}deg) scaleX(${scaleX}) translateY(${handleY}px)`;
 			}
-
-			const svgScaleFactor = screenCTM.a;
-			const handleY = parseFloat(this.selectionPath.getAttribute("stroke-width")) / 2 * svgScaleFactor;
-
-			startHandle.style.left = `${startPt.x}px`;
-			startHandle.style.top = `${startPt.y}px`;
-			startHandle.style.transform = `rotate(${startAngle * 180 / Math.PI}deg) scaleX(-1) translateY(${handleY}px)`;
-
-			endHandle.style.left = `${endPt.x}px`;
-			endHandle.style.top = `${endPt.y}px`;
-			endHandle.style.transform = `rotate(${endAngle * 180 / Math.PI}deg) translateY(${handleY}px)`;
-
 		} else {
 			for (const handle of this.selectionHandles) {
 				if (handle.parentElement) {
