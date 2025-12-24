@@ -282,9 +282,10 @@ export class CurvedTextField {
 			// `line-height` can push the selection handles off screen, but not the caret handle
 			// `transform: scaleY` can push both off screen
 			// A caveat to either approach is that it can cause the page to scroll
+			// `rotate(180deg)` to place handles offscreen ABOVE can prevent scrolling (in some cases, not universally,
+			// i.e. for a SPA that shouldn't scroll but not embedded in the middle of a scrolling page)
 			// TODO: non-arbitrary scaling factor (something like "screen size / hiddenInput height"... or maybe "offsetY / hiddenInput height")
-			// TODO: try rotate(180deg) to place handles offscreen ABOVE to hopefully prevent scrolling (in some cases, not universally) depending on how it works
-			this.hiddenInput.style.transform = `scaleY(30)`;
+			this.hiddenInput.style.transform = `scaleY(30) rotate(180deg)`;
 		} else {
 			// rotate the input so that mobile browsers show selection start/end handles
 			// at least INITIALLY in the correct places; unfortunately we can't get

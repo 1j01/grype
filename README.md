@@ -48,7 +48,7 @@ Curved Text Fields:
 - Text selection can be jittery because of the hidden input is always at least one frame behind mouse movement
 - Text selection can get stuck collapsed when the selection is collapsed to a caret; I don't understand this
 - Selection handles for touch may be hard to grab (TODO: expand hitbox beyond visible area, maybe especially upwards)
-- Native selection handles can still be shown; they can't be styled away, but I *have* found a way to push them offscreen (currently pushed by a fixed distance, not always enough)
+- Native selection handles may still be shown. There's no way to hide them properly, but I *have* found a way to push them offscreen. However I expect it won't work in the case of an input in the middle of a scrolling page.
 - Stylistically:
   - I pictured the text fields being a little boxier around turns (though the text shouldn't turn any sharper)
   - padding for text in text field (along the text axis)
