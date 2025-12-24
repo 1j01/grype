@@ -19,7 +19,7 @@ Text follows the winding path of the field, including going backwards / upside d
   - [x] Context menu copy/cut/paste/select all (native browser behavior)
   - [x] Unicode support (including emoji, combining marks)
   - [ ] Spell check (not planned; couldn't be browser native... unless we used CSS shaders to transform the actual input for display?)
-  - [ ] Mobile style text selection (long press, start/end handles)
+  - [x] Mobile style text selection (long press, start/end handles)
   - [x] Double click to select word, triple click to select all (native browser behavior)
   - [x] Drag selected text within field or to other fields (native browser behavior)
   - [x] Available as a reusable component (`CurvedTextField` class)
@@ -38,24 +38,38 @@ Text follows the winding path of the field, including going backwards / upside d
 - [ ] Profit
 
 ## Known issues
-- You can create overlapping and self-intersecting paths (kinda fun though)
-- Page is scrolled towards the hidden input when typing
-- The viewport is scaled based on width only, requiring scrolling if height > width, and zoom is ineffective (only resizing the width of the viewport scales the content)
-- Dilate filter for borders is inefficient (MAY cause lag, not sure how bad)
-- Ctrl+Z doesn't undo text field expansion or creation
+
+Curved Text Fields:
+
+- Can't focus field reliably in Firefox (regression)
+- Page is scrolled towards the hidden input when typing (can be avoided by setting some subset of the styles `position: fixed; top: 0; left: 0; width: 100%; height: 100svh; overflow: hidden;` on the container element)
 - Slight inaccuracy accumulates over curves, seen in selection highlight, caret position, or editing after placing cursor (Chrome-family browsers only; Firefox works fine)
+- Dilate filter for borders is inefficient (MAY cause lag, not sure how bad)
+- Text selection can be jittery because of the hidden input is always at least one frame behind mouse movement
+- Text selection can get stuck collapsed when the selection is collapsed to a caret; I don't understand this
+- Selection handles for touch may be hard to grab (TODO: expand hitbox beyond visible area, maybe especially upwards)
+- Native selection handles can still be shown; they can't be styled away, but I *have* found a way to push them offscreen (currently pushed by a fixed distance, not always enough)
 - Stylistically:
   - I pictured the text fields being a little boxier around turns (though the text shouldn't turn any sharper)
   - padding for text in text field (along the text axis)
   - margin for text field (along the text axis) (borders currently overlap)
+
+"Grype" demo app:
+
+- You can create overlapping and self-intersecting paths (kinda fun though)
+- The viewport is scaled based on width only, requiring scrolling if height > width, and zoom is ineffective (only resizing the width of the viewport scales the content)
+- Ctrl+Z doesn't undo text field expansion or creation
 - Code quality:
   - I don't like the name `updateVisuals`
   - `// allow text selection on existing items...` block is outdated (at least comment, maybe behavior)
+  - `#simple-border` filter is created in grype.js, referenced in curved-text-field.js (should avoid dilate filter entirely though)
 
 ## Project name
 
-Project name: Grype ("grid type")  
+I started with the project name Grype ("grid type" / "gripe")  
 Tagline: "if you have gripes with this tool, just know that it didn't have a purpose in creating it"  
+
+But this project has evolved to be more about the text field than the (currently useless) grid based app, so I think a better name would be Serpentype. Not that that wasn't the core of the project, but you know, it can do more than grids! It accepts arbitrary paths.
 
 ## Future Directions
 
@@ -71,6 +85,7 @@ anyways here's some possible directions for the project:
 - puzzle game (think Baba is You meets Rush Hour, [Snakeshift](https://1j01.itch.io/snakeshift), [crossword puzzles](https://crosshare.org/isaiahodhner), and/or Scribblenauts)
 - tron typing action game: type different words to turn or go straight; try to box in your opponent(s); lobby system where you can create rooms and configure width/height, max players, time limit, and win conditions: either most letters, most words, or last standing. It would be different from Tron in that you can control your speed, so you would never crash unless you were forced to or made a mistake in which word you chose to type.
 - library for curved text inputs that can be embedded in other web projects
+  - TODO: rename repo to "serpentype" or "curved-text-field", treat "grype" as a demo app, split feature list between grype app and curved text field component, make a homepage with docs for the component (ideally searchable with a weirdly shaped search input), add features like placeholder text, scrolling within the input, readonly support, styling with CSS, integration with React, publish to npm, etc.
 
 (see also: [diverge](https://github.com/1j01/diverge))
 

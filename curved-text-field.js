@@ -75,6 +75,18 @@ export class CurvedTextField {
 			"pointer-events": "none",
 		});
 
+		const selectionHandlePath = svg("path", {
+			d: "M 0 0 L 10 0 A 10 10 90 1 1 0 10 Z",
+			fill: "rgba(0,120,215,0.8)",
+		});
+		const selectionHandleSVG = svg("svg", {
+			width: "20",
+			height: "20",
+			style: "position: fixed; transform-origin: 0% 0%; touch-action: none;",
+		});
+		selectionHandleSVG.append(selectionHandlePath);
+		this.selectionHandles = [selectionHandleSVG, selectionHandleSVG.cloneNode(true)];
+		this.usingTouch = false;
 
 		this.textElement.append(this.textPathElement);
 		this.element.append(
@@ -89,15 +101,15 @@ export class CurvedTextField {
 		document.body.append(this.hiddenInput);
 		document.body.append(this.hiddenMeasurementElement);
 
-		// let anchorIndex = -1;
-		// let caretIndex = -1;
-		// const setSelection = () => {
-		// 	this.hiddenInput.setSelectionRange(
-		// 		Math.min(anchorIndex, caretIndex),
-		// 		Math.max(anchorIndex, caretIndex),
-		// 		caretIndex < anchorIndex ? "backward" : "forward"
-		// 	);
-		// };
+		let anchorIndex = -1;
+		let caretIndex = -1;
+		const setSelection = () => {
+			this.hiddenInput.setSelectionRange(
+				Math.min(anchorIndex, caretIndex),
+				Math.max(anchorIndex, caretIndex),
+				caretIndex < anchorIndex ? "backward" : "forward"
+			);
+		};
 
 		// This function handles both pointermove and dragover
 		// and doesn't wait for pointerdown, because we need to update
@@ -109,10 +121,25 @@ export class CurvedTextField {
 		// it only accepts pointer events along the path.)
 		const onPointerMove = (event) => {
 			// console.log(event.type);
-			// event.preventDefault();
-			// caretIndex = getTextIndex(event);
-			// setSelection();
-			this.positionHiddenInput(event);
+			if (this.draggingSelectionHandle) {
+				event.preventDefault();
+				// TODO: figure out the correct selection side logic
+				// hard to test due to the bug where the selection collapses
+				// TODO: prevent selection from collapsing when dragging handle
+				// (it's actually native behavior; will this avoid the bug in this case, or is it totally separate?)
+				if ((this.draggingSelectionHandleIndex === 0) !== (this.hiddenInput.selectionStart < this.hiddenInput.selectionEnd)) {
+					// if ((this.draggingSelectionHandleIndex === 0) !== (this.hiddenInput.selectionStart > this.hiddenInput.selectionEnd)) {
+					// if ((this.draggingSelectionHandleIndex === 0) === (this.hiddenInput.selectionStart < this.hiddenInput.selectionEnd)) {
+					// if ((this.draggingSelectionHandleIndex === 0) === (this.hiddenInput.selectionStart > this.hiddenInput.selectionEnd)) {
+					// if (this.hiddenInput.selectionStart < this.hiddenInput.selectionEnd) {
+					anchorIndex = this.getTextIndex(event);
+				} else {
+					caretIndex = this.getTextIndex(event);
+				}
+				setSelection();
+			} else {
+				this.positionHiddenInput(event);
+			}
 			this.updateVisuals();
 		};
 		// const onPointerDown = (event) => {
@@ -146,11 +173,15 @@ export class CurvedTextField {
 		// this.pathElement.addEventListener("pointerdown", onPointerDown);
 		// this.hiddenInput.addEventListener("pointerdown", onPointerDown);
 
+		this.usingTouch = false;
 		const onPointerDown = (event) => {
 			this.draggingFromPath = true;
+			this.usingTouch = event.pointerType === "touch";
 		};
 		const onPointerUp = (event) => {
 			this.draggingFromPath = false;
+			this.draggingSelectionHandle = false;
+			this.draggingSelectionHandleIndex = -1;
 		};
 		this.pathElement.addEventListener("pointerdown", onPointerDown);
 		this.hiddenInput.addEventListener("pointerdown", onPointerDown);
@@ -159,8 +190,17 @@ export class CurvedTextField {
 		window.addEventListener("pointermove", onPointerMove);
 		window.addEventListener("dragover", onPointerMove);
 
+		const onHandlePointerDown = (event) => {
+			event.preventDefault();
+			this.draggingSelectionHandle = true;
+			this.draggingSelectionHandleIndex = this.selectionHandles.indexOf(event.currentTarget);
+		};
+		for (const handle of this.selectionHandles) {
+			handle.addEventListener("pointerdown", onHandlePointerDown);
+		}
 
 		this.hiddenInput.addEventListener("focus", (event) => {
+			// TODO: remove syncing of textPath -> hiddenInput; hiddenInput should be the source of truth
 			this.hiddenInput.value = this.textPathElement.textContent || "";
 			this.updateVisuals();
 			this.startCursorBlink();
@@ -180,8 +220,8 @@ export class CurvedTextField {
 		this.hiddenInput.addEventListener("selectionchange", (event) => {
 			this.startCursorBlink();
 			this.updateVisuals();
-			// anchorIndex = this.hiddenInput.selectionDirection === "backward" ? this.hiddenInput.selectionEnd ?? -1 : this.hiddenInput.selectionStart ?? -1;
-			// caretIndex = this.hiddenInput.selectionDirection === "backward" ? this.hiddenInput.selectionStart ?? -1 : this.hiddenInput.selectionEnd ?? -1;
+			anchorIndex = this.hiddenInput.selectionDirection === "backward" ? this.hiddenInput.selectionEnd ?? -1 : this.hiddenInput.selectionStart ?? -1;
+			caretIndex = this.hiddenInput.selectionDirection === "backward" ? this.hiddenInput.selectionStart ?? -1 : this.hiddenInput.selectionEnd ?? -1;
 		});
 
 		// Why?
@@ -213,7 +253,8 @@ export class CurvedTextField {
 		const point = this.toSVGSpace(event);
 		// Hide the input when pointer not interacting with or hovering over visual text field,
 		// so that you can click other things on the page.
-		if (!this.draggingFromPath && !this.pathElement.isPointInStroke(point)) {
+		// TODO: handle overlapped CurvedTextFields (ensure z-index of native inputs matches z-index of visual text fields)
+		if (!this.draggingFromPath && !this.draggingSelectionHandle && !this.pathElement.isPointInStroke(point)) {
 			// will this cause scrolling problems?
 			this.hiddenInput.style.left = `-9999px`;
 			this.hiddenInput.style.top = `-9999px`;
@@ -293,17 +334,20 @@ export class CurvedTextField {
 		const end = this.hiddenInput.selectionEnd ?? start;
 		const focused = document.activeElement === this.hiddenInput;
 
+		const getRotationAtLength = (path, length) => {
+			const epsilon = 0.01;
+			const pointSlightlyBefore = path.getPointAtLength(Math.max(0, length - epsilon));
+			const pointSlightlyAfter = path.getPointAtLength(length + epsilon);
+
+			return Math.atan2(pointSlightlyAfter.y - pointSlightlyBefore.y, pointSlightlyAfter.x - pointSlightlyBefore.x);
+		};
+
 		// ---- CARET ----
 		if (start === end && focused) {
 			// getSubStringLength can throw IndexSizeError if args are 0, 0
 			const len = start > 0 ? text.getSubStringLength(0, start) : 0;
 			const point = path.getPointAtLength(len);
-
-			const epsilon = 0.01;
-			const pointSlightlyBefore = path.getPointAtLength(Math.max(0, len - epsilon));
-			const pointSlightlyAfter = path.getPointAtLength(len + epsilon);
-
-			const angle = Math.atan2(pointSlightlyAfter.y - pointSlightlyBefore.y, pointSlightlyAfter.x - pointSlightlyBefore.x);
+			const angle = getRotationAtLength(path, len);
 			const caretHeight = this.fontSize;
 
 			const dx = Math.sin(angle) * caretHeight / 2;
@@ -328,6 +372,47 @@ export class CurvedTextField {
 			this.selectionPath.setAttribute("visibility", "visible");
 		} else {
 			this.selectionPath.setAttribute("visibility", "hidden");
+		}
+
+		// ---- SELECTION HANDLES (TOUCH) ----
+		if (start !== end && focused && this.usingTouch) {
+			// TODO: DRY (there's a reason I made the selectionHandles an array)
+			// also getScreenCTM doesn't need to be called multiple times
+			const fromLen = text.getSubStringLength(0, start);
+			const toLen = text.getSubStringLength(0, end);
+
+			let startPt = path.getPointAtLength(fromLen);
+			let endPt = path.getPointAtLength(toLen);
+
+			startPt = startPt.matrixTransform(this.element.ownerSVGElement.getScreenCTM());
+			endPt = endPt.matrixTransform(this.element.ownerSVGElement.getScreenCTM());
+
+			const startAngle = getRotationAtLength(path, fromLen);
+			const endAngle = getRotationAtLength(path, toLen);
+
+			const [startHandle, endHandle] = this.selectionHandles;
+
+			if (!startHandle.parentElement) {
+				document.body.append(startHandle, endHandle);
+			}
+
+			const svgScaleFactor = this.element.ownerSVGElement.getScreenCTM().a;
+			const handleY = parseFloat(this.selectionPath.getAttribute("stroke-width")) / 2 * svgScaleFactor;
+
+			startHandle.style.left = `${startPt.x}px`;
+			startHandle.style.top = `${startPt.y}px`;
+			startHandle.style.transform = `rotate(${startAngle * 180 / Math.PI}deg) scaleX(-1) translateY(${handleY}px)`;
+
+			endHandle.style.left = `${endPt.x}px`;
+			endHandle.style.top = `${endPt.y}px`;
+			endHandle.style.transform = `rotate(${endAngle * 180 / Math.PI}deg) translateY(${handleY}px)`;
+
+		} else {
+			for (const handle of this.selectionHandles) {
+				if (handle.parentElement) {
+					handle.parentElement.removeChild(handle);
+				}
+			}
 		}
 	}
 
