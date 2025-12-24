@@ -273,9 +273,11 @@ export class CurvedTextField {
 		this.hiddenInput.style.top = `${event.clientY - offsetY}px`;
 
 		// make input wide enough so it never scrolls
-		// TODO: make sure this doesn't expand indefinitely
-		// (we could use the hiddenMeasurementElement for this as well, but with full text)
-		this.hiddenInput.style.width = `${this.hiddenInput.scrollWidth + 50}px`;
+		// Compare scrollWidth which leads to oversizing:
+		// this.hiddenInput.style.width = `${this.hiddenInput.scrollWidth + 50}px`;
+		this.hiddenMeasurementElement.textContent = this.hiddenInput.value;
+		const fullRect = this.hiddenMeasurementElement.getBoundingClientRect();
+		this.hiddenInput.style.width = `${fullRect.width + 50}px`;
 
 		this.hiddenInput.style.transformOrigin = `${offsetX}px ${offsetY}px`;
 		const hideHandles = true;
