@@ -282,12 +282,19 @@ export class CurvedTextField {
 		this.hiddenInput.style.transformOrigin = `${offsetX}px ${offsetY}px`;
 		const hideHandles = true;
 		if (hideHandles) {
-			// `line-height` can push the selection handles off screen, but not the caret handle
-			// `transform: scaleY` can push both off screen
-			// A caveat to either approach is that it can cause the page to scroll
+			// `line-height` can push the selection handles off screen, but not the caret handle.
+			// `transform: scaleY` can push both off screen.
+			// A caveat to either approach is that it can cause the page to scroll.
+			// `rotate(180deg)` combined with `scaleY` can place handles offscreen ABOVE
+			// which can help to prevent scrolling (in some cases, not universally)
+			// However it may cause incorrect selection mapping on some browsers. Needs extensive testing.
+			// Scaling also in X can improve jitter caused by being one frame behind mouse movement
+			// and lessen bugs like the selection collapsing to a caret and the anchor shifting while you drag
+			// which I don't yet understand. Disable horizontal scaling if you want to test those bugs.
+			// Scaling too large can cause lag, at least in debug mode where the input is visible,
+			// and doesn't seem to further lessen the selection collapsing behavior.
 			// TODO: non-arbitrary scaling factor (something like "screen size / hiddenInput height"... or maybe "offsetY / hiddenInput height")
-			// TODO: try rotate(180deg) to place handles offscreen ABOVE to hopefully prevent scrolling (in some cases, not universally) depending on how it works
-			this.hiddenInput.style.transform = `scaleY(30)`;
+			this.hiddenInput.style.transform = `scale(30)`;
 		} else {
 			// rotate the input so that mobile browsers show selection start/end handles
 			// at least INITIALLY in the correct places; unfortunately we can't get

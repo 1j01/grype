@@ -45,8 +45,8 @@ Curved Text Fields:
 - Page is scrolled towards the hidden input when typing (can be avoided by setting some subset of the styles `position: fixed; top: 0; left: 0; width: 100%; height: 100svh; overflow: hidden;` on the container element)
 - Slight inaccuracy accumulates over curves, seen in selection highlight, caret position, or editing after placing cursor (Chrome-family browsers only; Firefox works fine)
 - Dilate filter for borders is inefficient (MAY cause lag, not sure how bad)
-- Text selection can be jittery because of the hidden input is always at least one frame behind mouse movement
-- Text selection can get stuck collapsed when the selection is collapsed to a caret; I don't understand this
+- Text selection can be jittery because of the hidden input is always at least one frame behind mouse movement; I've lessened this by scaling the hidden input horizontally, but it can't be perfect AFAIK.
+- Text selection can get stuck collapsed when the selection is collapsed to a caret; I don't understand this... it seems like a browser bug, though it happens on different browsers. That doesn't mean it's NOT a browser bug, but if it is, it's a bug in multiple browsers. This MAY also be lessened by scaling the hidden input horizontally, to some extent, but it's hard to tell.
 - Selection handles for touch may be hard to grab (TODO: expand hitbox beyond visible area, maybe especially upwards)
 - Native selection handles can still be shown; they can't be styled away, but I *have* found a way to push them offscreen (currently pushed by a fixed distance, not always enough)
 - Stylistically:
