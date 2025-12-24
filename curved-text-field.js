@@ -180,6 +180,7 @@ export class CurvedTextField {
 		const onPointerDown = (event) => {
 			this.draggingFromPath = true;
 			this.usingTouch = event.pointerType === "touch";
+			this.positionHiddenInput(event);
 		};
 		const onPointerUp = (event) => {
 			this.draggingFromPath = false;
