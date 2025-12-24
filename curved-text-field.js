@@ -374,16 +374,16 @@ export class CurvedTextField {
 
 		// ---- SELECTION HANDLES (TOUCH) ----
 		if (start !== end && focused && this.usingTouch) {
+			const screenCTM = this.element.ownerSVGElement.getScreenCTM();
 			// TODO: DRY (there's a reason I made the selectionHandles an array)
-			// also getScreenCTM doesn't need to be called multiple times
 			const fromLen = text.getSubStringLength(0, start);
 			const toLen = text.getSubStringLength(0, end);
 
 			let startPt = path.getPointAtLength(fromLen);
 			let endPt = path.getPointAtLength(toLen);
 
-			startPt = startPt.matrixTransform(this.element.ownerSVGElement.getScreenCTM());
-			endPt = endPt.matrixTransform(this.element.ownerSVGElement.getScreenCTM());
+			startPt = startPt.matrixTransform(screenCTM);
+			endPt = endPt.matrixTransform(screenCTM);
 
 			const startAngle = getRotationAtLength(path, fromLen);
 			const endAngle = getRotationAtLength(path, toLen);
@@ -394,7 +394,7 @@ export class CurvedTextField {
 				document.body.append(startHandle, endHandle);
 			}
 
-			const svgScaleFactor = this.element.ownerSVGElement.getScreenCTM().a;
+			const svgScaleFactor = screenCTM.a;
 			const handleY = parseFloat(this.selectionPath.getAttribute("stroke-width")) / 2 * svgScaleFactor;
 
 			startHandle.style.left = `${startPt.x}px`;
