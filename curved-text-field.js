@@ -380,16 +380,8 @@ export class CurvedTextField {
 				const handle = this.selectionHandles[i];
 
 				const pathOffset = text.getSubStringLength(0, i === 0 ? start : end);
-
-				let point = path.getPointAtLength(pathOffset);
-
-				point = point.matrixTransform(screenCTM);
-
+				const point = path.getPointAtLength(pathOffset).matrixTransform(screenCTM);
 				const angle = getRotationAtLength(path, pathOffset);
-
-				if (!handle.parentElement) {
-					document.body.append(handle);
-				}
 
 				const svgScaleFactor = screenCTM.a;
 				const handleY = parseFloat(this.selectionPath.getAttribute("stroke-width")) / 2 * svgScaleFactor;
@@ -398,6 +390,10 @@ export class CurvedTextField {
 				handle.style.left = `${point.x}px`;
 				handle.style.top = `${point.y}px`;
 				handle.style.transform = `rotate(${angle * 180 / Math.PI}deg) scaleX(${scaleX}) translateY(${handleY}px)`;
+
+				if (!handle.parentElement) {
+					document.body.append(handle);
+				}
 			}
 		} else {
 			for (const handle of this.selectionHandles) {
