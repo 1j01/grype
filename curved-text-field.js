@@ -125,16 +125,19 @@ export class CurvedTextField {
 				event.preventDefault();
 				// TODO: figure out the correct selection side logic
 				// hard to test due to the bug where the selection collapses
-				// TODO: prevent selection from collapsing when dragging handle
-				// (it's actually native behavior; will this avoid the bug in this case, or is it totally separate?)
+				const newIndex = this.getTextIndex(event);
 				if ((this.draggingSelectionHandleIndex === 0) !== (this.hiddenInput.selectionStart < this.hiddenInput.selectionEnd)) {
 					// if ((this.draggingSelectionHandleIndex === 0) !== (this.hiddenInput.selectionStart > this.hiddenInput.selectionEnd)) {
 					// if ((this.draggingSelectionHandleIndex === 0) === (this.hiddenInput.selectionStart < this.hiddenInput.selectionEnd)) {
 					// if ((this.draggingSelectionHandleIndex === 0) === (this.hiddenInput.selectionStart > this.hiddenInput.selectionEnd)) {
 					// if (this.hiddenInput.selectionStart < this.hiddenInput.selectionEnd) {
-					anchorIndex = this.getTextIndex(event);
+					if (caretIndex != newIndex) {
+						anchorIndex = newIndex;
+					}
 				} else {
-					caretIndex = this.getTextIndex(event);
+					if (anchorIndex != newIndex) {
+						caretIndex = newIndex;
+					}
 				}
 				setSelection();
 			} else {
