@@ -200,8 +200,6 @@ export class CurvedTextField {
 		}
 
 		this.hiddenInput.addEventListener("focus", (event) => {
-			// TODO: remove syncing of textPath -> hiddenInput; hiddenInput should be the source of truth
-			this.hiddenInput.value = this.textPathElement.textContent || "";
 			this.updateVisuals();
 			this.startCursorBlink();
 		});
